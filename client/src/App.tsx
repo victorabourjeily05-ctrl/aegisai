@@ -24,6 +24,31 @@ type AISystem = {
   status: string;
 };
 
+type AssessmentResult = {
+  id: number;
+  systemId: number;
+  systemName: string;
+  date: string;
+  likelihood: number;
+  impact: number;
+  score: number;
+  risk: RiskLevel;
+  framework: {
+    Govern: number;
+    Map: number;
+    Measure: number;
+    Manage: number;
+  };
+};
+
+type Question = {
+  id: string;
+  title: string;
+  description: string;
+  framework: "Govern" | "Map" | "Measure" | "Manage";
+  dimension: "likelihood" | "impact";
+};
+
 const initialSystems: AISystem[] = [
   {
     id: 1,
@@ -91,12 +116,91 @@ const initialSystems: AISystem[] = [
     risk: "Low",
     status: "Approved",
   },
+  {
+    id: 7,
+    name: "Marketing Copilot",
+    department: "Marketing",
+    owner: "Victor A.",
+    vendor: "OpenAI",
+    dataSensitivity: "Confidential",
+    criticality: "High",
+    risk: "Medium",
+    status: "Assessment due",
+  },
+];
+
+const assessmentQuestions: Question[] = [
+  {
+    id: "sensitiveData",
+    title: "Sensitive data exposure",
+    description:
+      "How much sensitive, confidential or restricted information does this AI system process?",
+    framework: "Map",
+    dimension: "impact",
+  },
+  {
+    id: "businessCriticality",
+    title: "Business criticality",
+    description:
+      "How significantly could failure of this AI system disrupt business operations?",
+    framework: "Map",
+    dimension: "impact",
+  },
+  {
+    id: "regulatoryImpact",
+    title: "Legal & regulatory exposure",
+    description:
+      "How significant could the legal, privacy, compliance or regulatory consequences be?",
+    framework: "Govern",
+    dimension: "impact",
+  },
+  {
+    id: "affectedUsers",
+    title: "People affected",
+    description:
+      "How many employees, customers or external stakeholders could be affected by incorrect AI decisions?",
+    framework: "Govern",
+    dimension: "impact",
+  },
+  {
+    id: "humanOversight",
+    title: "Human oversight gap",
+    description:
+      "How limited is meaningful human review before AI outputs influence decisions?",
+    framework: "Manage",
+    dimension: "likelihood",
+  },
+  {
+    id: "vendorDependency",
+    title: "Third-party dependency",
+    description:
+      "How dependent is the organization on an external AI vendor with limited control or visibility?",
+    framework: "Govern",
+    dimension: "likelihood",
+  },
+  {
+    id: "cyberControls",
+    title: "Cybersecurity control weakness",
+    description:
+      "How weak are authentication, access control, logging, monitoring or data protection controls?",
+    framework: "Manage",
+    dimension: "likelihood",
+  },
+  {
+    id: "modelReliability",
+    title: "Model reliability risk",
+    description:
+      "How likely are hallucinations, bias, inaccurate outputs or unpredictable model behavior?",
+    framework: "Measure",
+    dimension: "likelihood",
+  },
 ];
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [activePage, setActivePage] = useState<Page>("Dashboard");
   const [systems, setSystems] = useState<AISystem[]>(initialSystems);
+  const [assessments, setAssessments] = useState<AssessmentResult[]>([]);
   const [showAddSystem, setShowAddSystem] = useState(false);
 
   if (!loggedIn) {
@@ -104,7 +208,6 @@ function App() {
       <div className="login-page">
         <div className="login-brand">
           <div className="brand-mark">A</div>
-
           <div>
             <h1>AegisAI</h1>
             <p>Enterprise AI Risk & Governance</p>
@@ -163,12 +266,15 @@ function App() {
     "Remediation",
   ];
 
+  const highRiskSystems = systems.filter(
+    (system) => system.risk === "High" || system.risk === "Critical"
+  ).length;
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-brand">
           <div className="brand-mark small">A</div>
-
           <div>
             <strong>AegisAI</strong>
             <span>Governance Platform</span>
@@ -201,7 +307,6 @@ function App() {
 
           <button className="profile">
             <div className="avatar">VA</div>
-
             <div>
               <strong>Victor Abou Rjeily</strong>
               <span>Risk Analyst</span>
@@ -213,12 +318,8 @@ function App() {
       <main className="main-content">
         <header>
           <div>
-            <p className="breadcrumb">
-              NovaBridge Group / {activePage}
-            </p>
-
+            <p className="breadcrumb">NovaBridge Group / {activePage}</p>
             <h1>{activePage}</h1>
-
             <p className="subtitle">
               Enterprise view of AI risk, governance and remediation.
             </p>
@@ -238,13 +339,17 @@ function App() {
                   + Add AI system
                 </button>
               </>
+            ) : activePage === "Risk Assessments" ? (
+              <button className="secondary-button">
+                Assessment methodology
+              </button>
             ) : (
               <>
-                <button className="secondary-button">
-                  Export report
-                </button>
-
-                <button className="primary-small">
+                <button className="secondary-button">Export report</button>
+                <button
+                  className="primary-small"
+                  onClick={() => setActivePage("Risk Assessments")}
+                >
                   + New assessment
                 </button>
               </>
@@ -257,21 +362,21 @@ function App() {
             <section className="summary-grid">
               <Metric
                 label="AI Systems"
-                value={String(systems.length + 18)}
-                detail="+3 this quarter"
+                value={String(systems.length)}
+                detail="Registered in inventory"
               />
 
               <Metric
                 label="High-Risk Systems"
-                value="5"
+                value={String(highRiskSystems)}
                 detail="Requires attention"
                 alert
               />
 
               <Metric
-                label="Open Risks"
-                value="17"
-                detail="6 overdue"
+                label="Assessments Completed"
+                value={String(assessments.length)}
+                detail="Current session"
               />
 
               <Metric
@@ -304,29 +409,10 @@ function App() {
                   </div>
 
                   <div className="risk-bars">
-                    <RiskBar
-                      label="Critical"
-                      value={2}
-                      width={18}
-                    />
-
-                    <RiskBar
-                      label="High"
-                      value={5}
-                      width={42}
-                    />
-
-                    <RiskBar
-                      label="Medium"
-                      value={9}
-                      width={68}
-                    />
-
-                    <RiskBar
-                      label="Low"
-                      value={8}
-                      width={58}
-                    />
+                    <RiskBar label="Critical" value={2} width={18} />
+                    <RiskBar label="High" value={5} width={42} />
+                    <RiskBar label="Medium" value={9} width={68} />
+                    <RiskBar label="Low" value={8} width={58} />
                   </div>
                 </div>
               </div>
@@ -346,7 +432,7 @@ function App() {
               </div>
             </section>
 
-            <section className="dashboard-grid bottom-grid">
+            <section className="dashboard-grid">
               <div className="panel">
                 <div className="panel-heading">
                   <div>
@@ -372,33 +458,22 @@ function App() {
                     <span>Owner</span>
                   </div>
 
-                  <RiskRow
-                    name="RecruitAI"
-                    dept="Human Resources"
-                    risk="Critical"
-                    owner="Sarah K."
-                  />
-
-                  <RiskRow
-                    name="Finance Copilot"
-                    dept="Finance"
-                    risk="High"
-                    owner="Omar H."
-                  />
-
-                  <RiskRow
-                    name="CustomerAssist"
-                    dept="Customer Service"
-                    risk="High"
-                    owner="Lina M."
-                  />
-
-                  <RiskRow
-                    name="ThreatLens AI"
-                    dept="Information Security"
-                    risk="Medium"
-                    owner="Karim A."
-                  />
+                  {systems
+                    .filter(
+                      (system) =>
+                        system.risk === "Critical" ||
+                        system.risk === "High"
+                    )
+                    .slice(0, 4)
+                    .map((system) => (
+                      <RiskRow
+                        key={system.id}
+                        name={system.name}
+                        dept={system.department}
+                        risk={system.risk}
+                        owner={system.owner}
+                      />
+                    ))}
                 </div>
               </div>
 
@@ -446,6 +521,30 @@ function App() {
           </>
         ) : activePage === "AI Inventory" ? (
           <AIInventory systems={systems} />
+        ) : activePage === "Risk Assessments" ? (
+          <RiskAssessments
+            systems={systems}
+            assessments={assessments}
+            onAssessmentComplete={(result) => {
+              setAssessments((current) => [result, ...current]);
+
+              setSystems((current) =>
+                current.map((system) =>
+                  system.id === result.systemId
+                    ? {
+                        ...system,
+                        risk: result.risk,
+                        status:
+                          result.risk === "Critical" ||
+                          result.risk === "High"
+                            ? "Review required"
+                            : "Assessed",
+                      }
+                    : system
+                )
+              );
+            }}
+          />
         ) : (
           <section className="placeholder-page">
             <span className="eyebrow">
@@ -455,8 +554,8 @@ function App() {
             <h2>{activePage}</h2>
 
             <p>
-              This module will be built next and connected
-              to the AegisAI risk engine.
+              This module will be built next and connected to
+              the AegisAI risk engine.
             </p>
           </section>
         )}
@@ -474,28 +573,641 @@ function App() {
   );
 }
 
+function RiskAssessments({
+  systems,
+  assessments,
+  onAssessmentComplete,
+}: {
+  systems: AISystem[];
+  assessments: AssessmentResult[];
+  onAssessmentComplete: (result: AssessmentResult) => void;
+}) {
+  const [selectedSystemId, setSelectedSystemId] =
+    useState<number>(systems[0]?.id ?? 0);
+
+  const [answers, setAnswers] =
+    useState<Record<string, number>>({});
+
+  const [result, setResult] =
+    useState<AssessmentResult | null>(null);
+
+  const selectedSystem = systems.find(
+    (system) => system.id === selectedSystemId
+  );
+
+  const answeredCount = Object.keys(answers).length;
+
+  const completion = Math.round(
+    (answeredCount / assessmentQuestions.length) * 100
+  );
+
+  function calculateAssessment() {
+    if (!selectedSystem) return;
+
+    if (
+      Object.keys(answers).length !==
+      assessmentQuestions.length
+    ) {
+      alert("Please answer all assessment questions first.");
+      return;
+    }
+
+    const likelihoodAnswers = assessmentQuestions
+      .filter(
+        (question) =>
+          question.dimension === "likelihood"
+      )
+      .map((question) => answers[question.id]);
+
+    const impactAnswers = assessmentQuestions
+      .filter(
+        (question) => question.dimension === "impact"
+      )
+      .map((question) => answers[question.id]);
+
+    const likelihood =
+      likelihoodAnswers.reduce(
+        (sum, value) => sum + value,
+        0
+      ) / likelihoodAnswers.length;
+
+    const impact =
+      impactAnswers.reduce(
+        (sum, value) => sum + value,
+        0
+      ) / impactAnswers.length;
+
+    const score = Math.round(likelihood * impact);
+
+    let risk: RiskLevel = "Low";
+
+    if (score >= 17) {
+      risk = "Critical";
+    } else if (score >= 10) {
+      risk = "High";
+    } else if (score >= 5) {
+      risk = "Medium";
+    }
+
+    const frameworkNames = [
+      "Govern",
+      "Map",
+      "Measure",
+      "Manage",
+    ] as const;
+
+    const framework = frameworkNames.reduce(
+      (acc, frameworkName) => {
+        const frameworkQuestions =
+          assessmentQuestions.filter(
+            (question) =>
+              question.framework === frameworkName
+          );
+
+        const frameworkRisk =
+          frameworkQuestions.reduce(
+            (sum, question) =>
+              sum + answers[question.id],
+            0
+          ) / frameworkQuestions.length;
+
+        acc[frameworkName] = Math.round(
+          100 - ((frameworkRisk - 1) / 4) * 75
+        );
+
+        return acc;
+      },
+      {
+        Govern: 0,
+        Map: 0,
+        Measure: 0,
+        Manage: 0,
+      }
+    );
+
+    const assessmentResult: AssessmentResult = {
+      id: Date.now(),
+      systemId: selectedSystem.id,
+      systemName: selectedSystem.name,
+      date: new Date().toLocaleDateString(),
+      likelihood: Number(likelihood.toFixed(1)),
+      impact: Number(impact.toFixed(1)),
+      score,
+      risk,
+      framework,
+    };
+
+    setResult(assessmentResult);
+    onAssessmentComplete(assessmentResult);
+  }
+
+  function startNewAssessment() {
+    setAnswers({});
+    setResult(null);
+  }
+
+  return (
+    <>
+      <section className="assessment-top-grid">
+        <div className="assessment-intro">
+          <span className="panel-label">
+            AI RISK ASSESSMENT
+          </span>
+
+          <h2>Assess AI System Risk</h2>
+
+          <p>
+            Evaluate inherent AI risk across business impact,
+            cybersecurity, governance, third-party dependency
+            and model reliability.
+          </p>
+        </div>
+
+        <div className="assessment-progress-card">
+          <div>
+            <span>Assessment progress</span>
+            <strong>{completion}%</strong>
+          </div>
+
+          <div className="assessment-progress-track">
+            <div
+              style={{ width: `${completion}%` }}
+            />
+          </div>
+
+          <small>
+            {answeredCount} of {assessmentQuestions.length} questions completed
+          </small>
+        </div>
+      </section>
+
+      {!result ? (
+        <section className="assessment-layout">
+          <div className="assessment-form-panel">
+            <div className="assessment-system-selector">
+              <div>
+                <span className="panel-label">
+                  SYSTEM SCOPE
+                </span>
+
+                <h3>Select AI System</h3>
+              </div>
+
+              <select
+                value={selectedSystemId}
+                onChange={(e) => {
+                  setSelectedSystemId(
+                    Number(e.target.value)
+                  );
+                  setAnswers({});
+                }}
+              >
+                {systems.map((system) => (
+                  <option
+                    key={system.id}
+                    value={system.id}
+                  >
+                    {system.name} · {system.department}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {selectedSystem && (
+              <div className="selected-system-card">
+                <div className="system-icon large">
+                  {selectedSystem.name.charAt(0)}
+                </div>
+
+                <div>
+                  <strong>{selectedSystem.name}</strong>
+                  <span>
+                    {selectedSystem.department} ·{" "}
+                    {selectedSystem.vendor}
+                  </span>
+                </div>
+
+                <div className="selected-system-meta">
+                  <span>
+                    Data:{" "}
+                    <strong>
+                      {selectedSystem.dataSensitivity}
+                    </strong>
+                  </span>
+
+                  <span>
+                    Criticality:{" "}
+                    <strong>
+                      {selectedSystem.criticality}
+                    </strong>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="question-list">
+              {assessmentQuestions.map(
+                (question, index) => (
+                  <div
+                    className="assessment-question"
+                    key={question.id}
+                  >
+                    <div className="question-number">
+                      {index + 1}
+                    </div>
+
+                    <div className="question-content">
+                      <div className="question-heading">
+                        <div>
+                          <h3>{question.title}</h3>
+                          <p>
+                            {question.description}
+                          </p>
+                        </div>
+
+                        <span className="framework-badge">
+                          {question.framework}
+                        </span>
+                      </div>
+
+                      <div className="risk-scale">
+                        {[1, 2, 3, 4, 5].map(
+                          (score) => (
+                            <button
+                              type="button"
+                              key={score}
+                              className={
+                                answers[
+                                  question.id
+                                ] === score
+                                  ? "scale-option selected"
+                                  : "scale-option"
+                              }
+                              onClick={() =>
+                                setAnswers(
+                                  (current) => ({
+                                    ...current,
+                                    [question.id]:
+                                      score,
+                                  })
+                                )
+                              }
+                            >
+                              <strong>{score}</strong>
+
+                              <span>
+                                {score === 1
+                                  ? "Very low"
+                                  : score === 2
+                                  ? "Low"
+                                  : score === 3
+                                  ? "Moderate"
+                                  : score === 4
+                                  ? "High"
+                                  : "Very high"}
+                              </span>
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+
+            <div className="assessment-submit">
+              <div>
+                <strong>
+                  Ready to calculate?
+                </strong>
+
+                <span>
+                  AegisAI will calculate likelihood,
+                  impact and overall risk.
+                </span>
+              </div>
+
+              <button
+                className="primary-small"
+                onClick={calculateAssessment}
+              >
+                Calculate risk
+              </button>
+            </div>
+          </div>
+
+          <aside className="assessment-methodology">
+            <span className="panel-label">
+              METHODOLOGY
+            </span>
+
+            <h3>Risk Scoring</h3>
+
+            <p>
+              Each question is scored from 1 to 5.
+            </p>
+
+            <div className="formula-card">
+              <span>Risk Score</span>
+              <strong>
+                Likelihood × Impact
+              </strong>
+            </div>
+
+            <div className="methodology-level">
+              <span className="risk-dot low" />
+              <div>
+                <strong>Low</strong>
+                <small>1–4</small>
+              </div>
+            </div>
+
+            <div className="methodology-level">
+              <span className="risk-dot medium" />
+              <div>
+                <strong>Medium</strong>
+                <small>5–9</small>
+              </div>
+            </div>
+
+            <div className="methodology-level">
+              <span className="risk-dot high" />
+              <div>
+                <strong>High</strong>
+                <small>10–16</small>
+              </div>
+            </div>
+
+            <div className="methodology-level">
+              <span className="risk-dot critical" />
+              <div>
+                <strong>Critical</strong>
+                <small>17–25</small>
+              </div>
+            </div>
+
+            <div className="methodology-note">
+              <strong>NIST AI RMF</strong>
+
+              <p>
+                Questions are mapped to Govern, Map,
+                Measure and Manage.
+              </p>
+            </div>
+          </aside>
+        </section>
+      ) : (
+        <AssessmentResultView
+          result={result}
+          onNewAssessment={startNewAssessment}
+        />
+      )}
+
+      {assessments.length > 0 && (
+        <section className="assessment-history-panel">
+          <div className="panel-heading">
+            <div>
+              <span className="panel-label">
+                ASSESSMENT HISTORY
+              </span>
+
+              <h2>Completed Assessments</h2>
+            </div>
+          </div>
+
+          <div className="assessment-history-table">
+            <div className="assessment-history-row history-head">
+              <span>AI System</span>
+              <span>Date</span>
+              <span>Likelihood</span>
+              <span>Impact</span>
+              <span>Score</span>
+              <span>Risk</span>
+            </div>
+
+            {assessments.map((assessment) => (
+              <div
+                className="assessment-history-row"
+                key={assessment.id}
+              >
+                <strong>
+                  {assessment.systemName}
+                </strong>
+
+                <span>{assessment.date}</span>
+
+                <span>
+                  {assessment.likelihood} / 5
+                </span>
+
+                <span>
+                  {assessment.impact} / 5
+                </span>
+
+                <span>
+                  {assessment.score} / 25
+                </span>
+
+                <span
+                  className={`risk-pill ${assessment.risk.toLowerCase()}`}
+                >
+                  {assessment.risk}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+
+function AssessmentResultView({
+  result,
+  onNewAssessment,
+}: {
+  result: AssessmentResult;
+  onNewAssessment: () => void;
+}) {
+  return (
+    <section className="assessment-result-panel">
+      <div className="result-header">
+        <div>
+          <span className="panel-label">
+            ASSESSMENT COMPLETE
+          </span>
+
+          <h2>{result.systemName}</h2>
+
+          <p>
+            Risk assessment completed on {result.date}.
+          </p>
+        </div>
+
+        <button
+          className="primary-small"
+          onClick={onNewAssessment}
+        >
+          + New assessment
+        </button>
+      </div>
+
+      <div className="result-grid">
+        <div className="result-score-card">
+          <span>Overall risk score</span>
+
+          <strong>{result.score}</strong>
+
+          <small>/ 25</small>
+
+          <div
+            className={`result-risk-label ${result.risk.toLowerCase()}`}
+          >
+            {result.risk} Risk
+          </div>
+        </div>
+
+        <div className="result-metrics">
+          <div>
+            <span>Likelihood</span>
+            <strong>
+              {result.likelihood} / 5
+            </strong>
+          </div>
+
+          <div>
+            <span>Impact</span>
+            <strong>{result.impact} / 5</strong>
+          </div>
+
+          <div>
+            <span>Risk treatment</span>
+            <strong>
+              {result.risk === "Critical"
+                ? "Immediate action"
+                : result.risk === "High"
+                ? "Priority remediation"
+                : result.risk === "Medium"
+                ? "Monitor & improve"
+                : "Accept / monitor"}
+            </strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="result-framework-section">
+        <div>
+          <span className="panel-label">
+            NIST AI RMF MAPPING
+          </span>
+
+          <h3>Governance Readiness</h3>
+        </div>
+
+        <div className="result-framework-grid">
+          <FrameworkScore
+            name="Govern"
+            score={result.framework.Govern}
+          />
+
+          <FrameworkScore
+            name="Map"
+            score={result.framework.Map}
+          />
+
+          <FrameworkScore
+            name="Measure"
+            score={result.framework.Measure}
+          />
+
+          <FrameworkScore
+            name="Manage"
+            score={result.framework.Manage}
+          />
+        </div>
+      </div>
+
+      <div className="result-recommendation">
+        <span className="panel-label">
+          AEGISAI RECOMMENDATION
+        </span>
+
+        <h3>
+          {result.risk === "Critical"
+            ? "Escalate to governance leadership immediately."
+            : result.risk === "High"
+            ? "Prioritize remediation before expanding system use."
+            : result.risk === "Medium"
+            ? "Continue operation with targeted control improvements."
+            : "Maintain controls and monitor risk periodically."}
+        </h3>
+
+        <p>
+          Focus on the weakest NIST AI RMF area and
+          document ownership, controls and remediation
+          actions before the next review.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function FrameworkScore({
+  name,
+  score,
+}: {
+  name: string;
+  score: number;
+}) {
+  return (
+    <div className="framework-score-card">
+      <div>
+        <strong>{name}</strong>
+        <span>{score}%</span>
+      </div>
+
+      <div className="framework-track">
+        <div style={{ width: `${score}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function AIInventory({
   systems,
 }: {
   systems: AISystem[];
 }) {
   const [search, setSearch] = useState("");
-  const [riskFilter, setRiskFilter] = useState("All");
+  const [riskFilter, setRiskFilter] =
+    useState("All");
 
-  const filteredSystems = systems.filter((system) => {
-    const searchText = search.toLowerCase();
+  const filteredSystems = systems.filter(
+    (system) => {
+      const searchText = search.toLowerCase();
 
-    const matchesSearch =
-      system.name.toLowerCase().includes(searchText) ||
-      system.department.toLowerCase().includes(searchText) ||
-      system.vendor.toLowerCase().includes(searchText) ||
-      system.owner.toLowerCase().includes(searchText);
+      const matchesSearch =
+        system.name
+          .toLowerCase()
+          .includes(searchText) ||
+        system.department
+          .toLowerCase()
+          .includes(searchText) ||
+        system.vendor
+          .toLowerCase()
+          .includes(searchText) ||
+        system.owner
+          .toLowerCase()
+          .includes(searchText);
 
-    const matchesRisk =
-      riskFilter === "All" || system.risk === riskFilter;
+      const matchesRisk =
+        riskFilter === "All" ||
+        system.risk === riskFilter;
 
-    return matchesSearch && matchesRisk;
-  });
+      return matchesSearch && matchesRisk;
+    }
+  );
 
   const highRisk = systems.filter(
     (system) =>
@@ -552,8 +1264,8 @@ function AIInventory({
             <h2>Enterprise AI Systems</h2>
 
             <p>
-              Central register of AI systems, business owners,
-              vendors and risk classifications.
+              Central register of AI systems, business
+              owners, vendors and risk classifications.
             </p>
           </div>
 
@@ -562,7 +1274,9 @@ function AIInventory({
               type="text"
               placeholder="Search systems..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
             />
 
             <select
@@ -650,18 +1364,26 @@ function AddSystemModal({
   onAdd: (system: AISystem) => void;
 }) {
   const [name, setName] = useState("");
-  const [department, setDepartment] = useState("");
+  const [department, setDepartment] =
+    useState("");
   const [owner, setOwner] = useState("");
   const [vendor, setVendor] = useState("");
-  const [dataSensitivity, setDataSensitivity] =
-    useState("Internal");
+  const [
+    dataSensitivity,
+    setDataSensitivity,
+  ] = useState("Internal");
   const [criticality, setCriticality] =
     useState("Medium");
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
-    if (!name || !department || !owner || !vendor) {
+    if (
+      !name ||
+      !department ||
+      !owner ||
+      !vendor
+    ) {
       return;
     }
 
@@ -758,7 +1480,9 @@ function AddSystemModal({
             <select
               value={dataSensitivity}
               onChange={(e) =>
-                setDataSensitivity(e.target.value)
+                setDataSensitivity(
+                  e.target.value
+                )
               }
             >
               <option>Public</option>
@@ -870,7 +1594,9 @@ function FrameworkRow({
       </div>
 
       <div className="framework-track">
-        <div style={{ width: `${score}%` }} />
+        <div
+          style={{ width: `${score}%` }}
+        />
       </div>
     </div>
   );

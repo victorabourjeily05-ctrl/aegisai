@@ -1,5 +1,13 @@
-import { useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type FormEvent,
+} from "react";
 import "./App.css";
+
+/* =========================================================
+   TYPES
+========================================================= */
 
 type Page =
   | "Dashboard"
@@ -10,7 +18,11 @@ type Page =
   | "Vendors"
   | "Remediation";
 
-type RiskLevel = "Low" | "Medium" | "High" | "Critical";
+type RiskLevel =
+  | "Low"
+  | "Medium"
+  | "High"
+  | "Critical";
 
 type ControlStatus =
   | "Implemented"
@@ -97,7 +109,11 @@ type ControlRecord = {
   id: string;
   name: string;
   description: string;
-  framework: "Govern" | "Map" | "Measure" | "Manage";
+  framework:
+    | "Govern"
+    | "Map"
+    | "Measure"
+    | "Manage";
   category: string;
   owner: string;
   status: ControlStatus;
@@ -142,9 +158,19 @@ type Question = {
   id: string;
   title: string;
   description: string;
-  framework: "Govern" | "Map" | "Measure" | "Manage";
-  dimension: "likelihood" | "impact";
+  framework:
+    | "Govern"
+    | "Map"
+    | "Measure"
+    | "Manage";
+  dimension:
+    | "likelihood"
+    | "impact";
 };
+
+/* =========================================================
+   INITIAL DATA
+========================================================= */
 
 const initialSystems: AISystem[] = [
   {
@@ -310,8 +336,12 @@ const initialControls: ControlRecord[] = [
     owner: "AI Governance",
     status: "Partial",
     effectiveness: "Partially effective",
-    linkedRiskIds: ["RISK-001", "RISK-003"],
-    evidence: "HR AI approval workflow documented.",
+    linkedRiskIds: [
+      "RISK-001",
+      "RISK-003",
+    ],
+    evidence:
+      "HR AI approval workflow documented.",
     reviewDate: "2026-12-15",
   },
   {
@@ -324,8 +354,12 @@ const initialControls: ControlRecord[] = [
     owner: "Information Security",
     status: "Implemented",
     effectiveness: "Effective",
-    linkedRiskIds: ["RISK-002", "RISK-003"],
-    evidence: "MFA configuration and access review evidence.",
+    linkedRiskIds: [
+      "RISK-002",
+      "RISK-003",
+    ],
+    evidence:
+      "MFA configuration and access review evidence.",
     reviewDate: "2027-01-15",
   },
   {
@@ -338,8 +372,12 @@ const initialControls: ControlRecord[] = [
     owner: "Data Governance",
     status: "Implemented",
     effectiveness: "Partially effective",
-    linkedRiskIds: ["RISK-002", "RISK-003"],
-    evidence: "Data classification standard and encryption controls.",
+    linkedRiskIds: [
+      "RISK-002",
+      "RISK-003",
+    ],
+    evidence:
+      "Data classification standard and encryption controls.",
     reviewDate: "2026-11-30",
   },
   {
@@ -353,7 +391,8 @@ const initialControls: ControlRecord[] = [
     status: "Implemented",
     effectiveness: "Effective",
     linkedRiskIds: ["RISK-002"],
-    evidence: "Centralized activity logs retained for review.",
+    evidence:
+      "Centralized activity logs retained for review.",
     reviewDate: "2027-01-10",
   },
   {
@@ -366,7 +405,10 @@ const initialControls: ControlRecord[] = [
     owner: "Model Assurance",
     status: "Implemented",
     effectiveness: "Effective",
-    linkedRiskIds: ["RISK-001", "RISK-003"],
+    linkedRiskIds: [
+      "RISK-001",
+      "RISK-003",
+    ],
     evidence:
       "Model bias and accuracy test report v1.0 reviewed and approved.",
     reviewDate: "2026-11-15",
@@ -381,8 +423,13 @@ const initialControls: ControlRecord[] = [
     owner: "Vendor Risk",
     status: "Implemented",
     effectiveness: "Partially effective",
-    linkedRiskIds: ["RISK-001", "RISK-002", "RISK-003"],
-    evidence: "Vendor due diligence questionnaire completed.",
+    linkedRiskIds: [
+      "RISK-001",
+      "RISK-002",
+      "RISK-003",
+    ],
+    evidence:
+      "Vendor due diligence questionnaire completed.",
     reviewDate: "2027-02-01",
   },
   {
@@ -395,8 +442,13 @@ const initialControls: ControlRecord[] = [
     owner: "Information Security",
     status: "Implemented",
     effectiveness: "Effective",
-    linkedRiskIds: ["RISK-001", "RISK-002", "RISK-003"],
-    evidence: "AI incident playbook approved.",
+    linkedRiskIds: [
+      "RISK-001",
+      "RISK-002",
+      "RISK-003",
+    ],
+    evidence:
+      "AI incident playbook approved.",
     reviewDate: "2027-01-31",
   },
   {
@@ -409,8 +461,12 @@ const initialControls: ControlRecord[] = [
     owner: "Privacy Office",
     status: "Implemented",
     effectiveness: "Effective",
-    linkedRiskIds: ["RISK-002", "RISK-003"],
-    evidence: "Retention standard and user guidance published.",
+    linkedRiskIds: [
+      "RISK-002",
+      "RISK-003",
+    ],
+    evidence:
+      "Retention standard and user guidance published.",
     reviewDate: "2026-12-20",
   },
 ];
@@ -423,7 +479,8 @@ const initialVendors: VendorRecord[] = [
     owner: "Technology Procurement",
     status: "Conditional",
     dueDiligence: "Complete",
-    dataProcessing: "Confidential business and customer data",
+    dataProcessing:
+      "Confidential business and customer data",
     securityRisk: 2,
     privacyRisk: 3,
     resilienceRisk: 2,
@@ -440,7 +497,8 @@ const initialVendors: VendorRecord[] = [
     owner: "IT Procurement",
     status: "Approved",
     dueDiligence: "Complete",
-    dataProcessing: "Confidential financial information",
+    dataProcessing:
+      "Confidential financial information",
     securityRisk: 2,
     privacyRisk: 2,
     resilienceRisk: 2,
@@ -457,7 +515,8 @@ const initialVendors: VendorRecord[] = [
     owner: "Legal Technology",
     status: "Conditional",
     dueDiligence: "Partial",
-    dataProcessing: "Confidential legal information",
+    dataProcessing:
+      "Confidential legal information",
     securityRisk: 3,
     privacyRisk: 3,
     resilienceRisk: 3,
@@ -474,7 +533,8 @@ const initialVendors: VendorRecord[] = [
     owner: "HR Procurement",
     status: "Review required",
     dueDiligence: "Partial",
-    dataProcessing: "Restricted candidate and employment data",
+    dataProcessing:
+      "Restricted candidate and employment data",
     securityRisk: 4,
     privacyRisk: 4,
     resilienceRisk: 3,
@@ -504,22 +564,27 @@ const initialRemediation: RemediationAction[] = [
   },
   {
     id: "REM-002",
-    title: "Complete HireSense AI governance evidence",
+    title:
+      "Complete HireSense AI governance evidence",
     description:
       "Obtain missing bias testing, regulatory compliance and assurance evidence from HireSense AI.",
     owner: "Vendor Risk",
     priority: "Critical",
-    status: "Blocked",
-    dueDate: "2026-10-05",
-    progress: 35,
+    status: "In progress",
+    dueDate: "2026-10-20",
+    progress: 70,
     linkedRiskIds: ["RISK-001"],
-    linkedControlIds: ["CTRL-005", "CTRL-006"],
+    linkedControlIds: [
+      "CTRL-005",
+      "CTRL-006",
+    ],
     notes:
-      "Waiting for vendor response regarding independent bias testing.",
+      "Vendor supplied preliminary bias testing evidence. Independent validation and final regulatory documentation remain outstanding.",
   },
   {
     id: "REM-003",
-    title: "Validate Finance Copilot data safeguards",
+    title:
+      "Validate Finance Copilot data safeguards",
     description:
       "Confirm confidential finance data handling, access restrictions and encryption controls.",
     owner: "Omar H.",
@@ -534,7 +599,8 @@ const initialRemediation: RemediationAction[] = [
   },
   {
     id: "REM-004",
-    title: "Reduce OpenAI concentration dependency",
+    title:
+      "Reduce OpenAI concentration dependency",
     description:
       "Document alternative service options, contingency procedures and switching considerations for OpenAI-dependent workflows.",
     owner: "Victor A.",
@@ -543,13 +609,17 @@ const initialRemediation: RemediationAction[] = [
     dueDate: "2026-10-25",
     progress: 50,
     linkedRiskIds: ["RISK-003"],
-    linkedControlIds: ["CTRL-006", "CTRL-008"],
+    linkedControlIds: [
+      "CTRL-006",
+      "CTRL-008",
+    ],
     notes:
       "Alternative provider analysis initiated.",
   },
   {
     id: "REM-005",
-    title: "Complete Marketing Copilot model assurance",
+    title:
+      "Complete Marketing Copilot model assurance",
     description:
       "Perform accuracy and harmful-output testing and document final model assurance results.",
     owner: "Victor A.",
@@ -564,7 +634,8 @@ const initialRemediation: RemediationAction[] = [
   },
   {
     id: "REM-006",
-    title: "Run AI incident response tabletop",
+    title:
+      "Run AI incident response tabletop",
     description:
       "Test escalation, containment, communication and recovery procedures using an AI-related incident scenario.",
     owner: "Information Security",
@@ -572,7 +643,11 @@ const initialRemediation: RemediationAction[] = [
     status: "Not started",
     dueDate: "2026-11-01",
     progress: 0,
-    linkedRiskIds: ["RISK-001", "RISK-002", "RISK-003"],
+    linkedRiskIds: [
+      "RISK-001",
+      "RISK-002",
+      "RISK-003",
+    ],
     linkedControlIds: ["CTRL-007"],
     notes:
       "Scenario and participants to be confirmed.",
@@ -646,14 +721,131 @@ const assessmentQuestions: Question[] = [
   },
 ];
 
-function getRiskLevel(score: number): RiskLevel {
-  if (score >= 17) return "Critical";
-  if (score >= 10) return "High";
-  if (score >= 5) return "Medium";
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function usePersistentState<T>(
+  key: string,
+  initialValue: T
+) {
+  const [value, setValue] =
+    useState<T>(() => {
+      try {
+        const saved =
+          localStorage.getItem(key);
+
+        if (saved !== null) {
+          return JSON.parse(
+            saved
+          ) as T;
+        }
+      } catch (error) {
+        console.error(
+          `Unable to load ${key}`,
+          error
+        );
+      }
+
+      return initialValue;
+    });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify(value)
+      );
+    } catch (error) {
+      console.error(
+        `Unable to save ${key}`,
+        error
+      );
+    }
+  }, [key, value]);
+
+  return [
+    value,
+    setValue,
+  ] as const;
+}
+
+function downloadCSV(
+  filename: string,
+  rows: (string | number)[][]
+) {
+  const csv = rows
+    .map((row) =>
+      row
+        .map((value) => {
+          const text =
+            String(
+              value ?? ""
+            ).replace(
+              /"/g,
+              '""'
+            );
+
+          return `"${text}"`;
+        })
+        .join(",")
+    )
+    .join("\n");
+
+  const blob = new Blob(
+    ["\uFEFF" + csv],
+    {
+      type: "text/csv;charset=utf-8;",
+    }
+  );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+  link.href = url;
+  link.download = filename;
+
+  document.body.appendChild(
+    link
+  );
+
+  link.click();
+
+  document.body.removeChild(
+    link
+  );
+
+  URL.revokeObjectURL(
+    url
+  );
+}
+
+function getRiskLevel(
+  score: number
+): RiskLevel {
+  if (score >= 17) {
+    return "Critical";
+  }
+
+  if (score >= 10) {
+    return "High";
+  }
+
+  if (score >= 5) {
+    return "Medium";
+  }
+
   return "Low";
 }
 
-function getVendorRiskScore(vendor: VendorRecord) {
+function getVendorRiskScore(
+  vendor: VendorRecord
+) {
   return (
     vendor.securityRisk +
     vendor.privacyRisk +
@@ -663,38 +855,98 @@ function getVendorRiskScore(vendor: VendorRecord) {
   );
 }
 
-function getVendorRiskLevel(score: number): RiskLevel {
-  if (score >= 20) return "Critical";
-  if (score >= 14) return "High";
-  if (score >= 9) return "Medium";
+function getVendorRiskLevel(
+  score: number
+): RiskLevel {
+  if (score >= 20) {
+    return "Critical";
+  }
+
+  if (score >= 14) {
+    return "High";
+  }
+
+  if (score >= 9) {
+    return "Medium";
+  }
+
   return "Low";
 }
 
-function calculateControlCoverage(controls: ControlRecord[]) {
-  if (!controls.length) return 0;
+function calculateControlCoverage(
+  controls: ControlRecord[]
+) {
+  if (!controls.length) {
+    return 0;
+  }
 
-  const points = controls.reduce((total, control) => {
-    if (control.status === "Implemented") return total + 1;
-    if (control.status === "Partial") return total + 0.5;
-    return total;
-  }, 0);
+  const points =
+    controls.reduce(
+      (total, control) => {
+        if (
+          control.status ===
+          "Implemented"
+        ) {
+          return total + 1;
+        }
 
-  return Math.round((points / controls.length) * 100);
+        if (
+          control.status ===
+          "Partial"
+        ) {
+          return total + 0.5;
+        }
+
+        return total;
+      },
+      0
+    );
+
+  return Math.round(
+    (points /
+      controls.length) *
+      100
+  );
 }
 
-function getRiskCategory(result: AssessmentResult) {
-  const entries = Object.entries(result.framework) as [
-    keyof AssessmentResult["framework"],
-    number
-  ][];
+function getRiskCategory(
+  result: AssessmentResult
+) {
+  const entries =
+    Object.entries(
+      result.framework
+    ) as [
+      keyof AssessmentResult["framework"],
+      number
+    ][];
 
-  const weakest = [...entries].sort(
-    (a, b) => a[1] - b[1]
-  )[0][0];
+  const weakest =
+    [...entries].sort(
+      (a, b) =>
+        a[1] - b[1]
+    )[0][0];
 
-  if (weakest === "Govern") return "Governance & Compliance";
-  if (weakest === "Map") return "Data & Business Impact";
-  if (weakest === "Measure") return "Model Reliability";
+  if (
+    weakest ===
+    "Govern"
+  ) {
+    return "Governance & Compliance";
+  }
+
+  if (
+    weakest ===
+    "Map"
+  ) {
+    return "Data & Business Impact";
+  }
+
+  if (
+    weakest ===
+    "Measure"
+  ) {
+    return "Model Reliability";
+  }
+
   return "Security & Operations";
 }
 
@@ -702,72 +954,654 @@ function createRiskStatement(
   system: AISystem,
   result: AssessmentResult
 ) {
-  const category = getRiskCategory(result);
+  const category =
+    getRiskCategory(
+      result
+    );
 
-  if (category === "Governance & Compliance") {
+  if (
+    category ===
+    "Governance & Compliance"
+  ) {
     return `${system.name} may operate without sufficient governance, accountability or regulatory controls, creating legal, compliance and reputational exposure.`;
   }
 
-  if (category === "Data & Business Impact") {
+  if (
+    category ===
+    "Data & Business Impact"
+  ) {
     return `${system.name} may expose ${system.dataSensitivity.toLowerCase()} information or disrupt critical ${system.department} processes if AI outputs are inaccurate or misused.`;
   }
 
-  if (category === "Model Reliability") {
+  if (
+    category ===
+    "Model Reliability"
+  ) {
     return `${system.name} may generate inaccurate, biased or unreliable outputs that could negatively affect ${system.department} decisions and business outcomes.`;
   }
 
   return `${system.name} may be exposed to insufficient cybersecurity, monitoring or operational controls, increasing the likelihood of unauthorized access, misuse or service disruption.`;
 }
 
-function slug(value: string) {
-  return value.toLowerCase().replace(/\s+/g, "-");
+function slug(
+  value: string
+) {
+  return value
+    .toLowerCase()
+    .replace(
+      /\s+/g,
+      "-"
+    );
 }
 
-function isOverdue(action: RemediationAction) {
-  if (action.status === "Completed") return false;
+function isOverdue(
+  action: RemediationAction
+) {
+  if (
+    action.status ===
+    "Completed"
+  ) {
+    return false;
+  }
 
-  const deadline = new Date(
-    `${action.dueDate}T23:59:59`
-  ).getTime();
+  const deadline =
+    new Date(
+      `${action.dueDate}T23:59:59`
+    ).getTime();
 
-  return deadline < Date.now();
+  return (
+    deadline <
+    Date.now()
+  );
 }
+
+/* =========================================================
+   MAIN APP
+========================================================= */
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [activePage, setActivePage] =
-    useState<Page>("Dashboard");
-
-  const [systems, setSystems] =
-    useState<AISystem[]>(initialSystems);
-
-  const [assessments, setAssessments] =
-    useState<AssessmentResult[]>(initialAssessments);
-
-  const [riskRecords, setRiskRecords] =
-    useState<RiskRecord[]>(initialRisks);
-
-  const [controls, setControls] =
-    useState<ControlRecord[]>(initialControls);
-
-  const [vendors, setVendors] =
-    useState<VendorRecord[]>(initialVendors);
-
-  const [remediation, setRemediation] =
-    useState<RemediationAction[]>(initialRemediation);
-
-  const [showAddSystem, setShowAddSystem] =
+  const [
+    loggedIn,
+    setLoggedIn,
+  ] =
     useState(false);
+
+  const [
+    activePage,
+    setActivePage,
+  ] =
+    useState<Page>(
+      "Dashboard"
+    );
+
+  const [
+    systems,
+    setSystems,
+  ] =
+    usePersistentState<
+      AISystem[]
+    >(
+      "aegisai.systems",
+      initialSystems
+    );
+
+  const [
+    assessments,
+    setAssessments,
+  ] =
+    usePersistentState<
+      AssessmentResult[]
+    >(
+      "aegisai.assessments",
+      initialAssessments
+    );
+
+  const [
+    riskRecords,
+    setRiskRecords,
+  ] =
+    usePersistentState<
+      RiskRecord[]
+    >(
+      "aegisai.risks",
+      initialRisks
+    );
+
+  const [
+    controls,
+    setControls,
+  ] =
+    usePersistentState<
+      ControlRecord[]
+    >(
+      "aegisai.controls",
+      initialControls
+    );
+
+  const [
+    vendors,
+    setVendors,
+  ] =
+    usePersistentState<
+      VendorRecord[]
+    >(
+      "aegisai.vendors",
+      initialVendors
+    );
+
+  const [
+    remediation,
+    setRemediation,
+  ] =
+    usePersistentState<
+      RemediationAction[]
+    >(
+      "aegisai.remediation",
+      initialRemediation
+    );
+
+  const [
+    showAddSystem,
+    setShowAddSystem,
+  ] =
+    useState(false);
+
+  const highRiskSystems =
+    systems.filter(
+      (system) =>
+        system.risk ===
+          "High" ||
+        system.risk ===
+          "Critical"
+    ).length;
+
+  const controlCoverage =
+    calculateControlCoverage(
+      controls
+    );
+
+  const openRemediation =
+    remediation.filter(
+      (action) =>
+        action.status !==
+        "Completed"
+    ).length;
+
+  const overdueRemediation =
+    remediation.filter(
+      isOverdue
+    ).length;
+
+  /* =========================
+     EXPORTS
+  ========================= */
+
+  function exportInventory() {
+    downloadCSV(
+      "AegisAI_AI_Inventory.csv",
+      [
+        [
+          "ID",
+          "AI System",
+          "Department",
+          "Owner",
+          "Vendor",
+          "Data Sensitivity",
+          "Criticality",
+          "Risk",
+          "Status",
+        ],
+
+        ...systems.map(
+          (system) => [
+            system.id,
+            system.name,
+            system.department,
+            system.owner,
+            system.vendor,
+            system.dataSensitivity,
+            system.criticality,
+            system.risk,
+            system.status,
+          ]
+        ),
+      ]
+    );
+  }
+
+  function exportRiskRegister() {
+    downloadCSV(
+      "AegisAI_Risk_Register.csv",
+      [
+        [
+          "Risk ID",
+          "AI System",
+          "Category",
+          "Risk Statement",
+          "Owner",
+          "Likelihood",
+          "Impact",
+          "Inherent Score",
+          "Inherent Risk",
+          "Treatment",
+          "Status",
+          "Residual Score",
+          "Residual Risk",
+        ],
+
+        ...riskRecords.map(
+          (risk) => [
+            risk.id,
+            risk.systemName,
+            risk.category,
+            risk.statement,
+            risk.owner,
+            risk.likelihood,
+            risk.impact,
+            risk.score,
+            risk.risk,
+            risk.treatment,
+            risk.status,
+            risk.residualScore,
+            risk.residualRisk,
+          ]
+        ),
+      ]
+    );
+  }
+
+  function exportControls() {
+    downloadCSV(
+      "AegisAI_Control_Matrix.csv",
+      [
+        [
+          "Control ID",
+          "Control",
+          "Description",
+          "NIST AI RMF",
+          "Category",
+          "Owner",
+          "Status",
+          "Effectiveness",
+          "Linked Risks",
+          "Evidence",
+          "Review Date",
+        ],
+
+        ...controls.map(
+          (control) => [
+            control.id,
+            control.name,
+            control.description,
+            control.framework,
+            control.category,
+            control.owner,
+            control.status,
+            control.effectiveness,
+            control.linkedRiskIds.join(
+              "; "
+            ),
+            control.evidence,
+            control.reviewDate,
+          ]
+        ),
+      ]
+    );
+  }
+
+  function exportVendors() {
+    downloadCSV(
+      "AegisAI_Vendor_Assessments.csv",
+      [
+        [
+          "Vendor ID",
+          "Vendor",
+          "Service",
+          "Owner",
+          "Approval Status",
+          "Due Diligence",
+          "Data Processing",
+          "Security Risk",
+          "Privacy Risk",
+          "Resilience Risk",
+          "Compliance Risk",
+          "Dependency Risk",
+          "Overall Score",
+          "Risk Level",
+          "Evidence",
+          "Next Review",
+        ],
+
+        ...vendors.map(
+          (vendor) => {
+            const score =
+              getVendorRiskScore(
+                vendor
+              );
+
+            return [
+              vendor.id,
+              vendor.name,
+              vendor.service,
+              vendor.owner,
+              vendor.status,
+              vendor.dueDiligence,
+              vendor.dataProcessing,
+              vendor.securityRisk,
+              vendor.privacyRisk,
+              vendor.resilienceRisk,
+              vendor.complianceRisk,
+              vendor.dependencyRisk,
+              score,
+              getVendorRiskLevel(
+                score
+              ),
+              vendor.evidence,
+              vendor.nextReview,
+            ];
+          }
+        ),
+      ]
+    );
+  }
+
+  function exportRemediation() {
+    downloadCSV(
+      "AegisAI_Remediation_Plan.csv",
+      [
+        [
+          "Action ID",
+          "Action",
+          "Description",
+          "Owner",
+          "Priority",
+          "Status",
+          "Due Date",
+          "Progress",
+          "Linked Risks",
+          "Linked Controls",
+          "Notes",
+          "Overdue",
+        ],
+
+        ...remediation.map(
+          (action) => [
+            action.id,
+            action.title,
+            action.description,
+            action.owner,
+            action.priority,
+            action.status,
+            action.dueDate,
+            `${action.progress}%`,
+            action.linkedRiskIds.join(
+              "; "
+            ),
+            action.linkedControlIds.join(
+              "; "
+            ),
+            action.notes,
+            isOverdue(action)
+              ? "Yes"
+              : "No",
+          ]
+        ),
+      ]
+    );
+  }
+
+  function exportExecutiveReport() {
+    downloadCSV(
+      "AegisAI_Executive_Report.csv",
+      [
+        [
+          "AegisAI Executive Governance Report",
+          "",
+        ],
+
+        [
+          "Organization",
+          "NovaBridge Group",
+        ],
+
+        [
+          "Framework",
+          "NIST AI RMF",
+        ],
+
+        ["", ""],
+
+        [
+          "Metric",
+          "Value",
+        ],
+
+        [
+          "AI Systems",
+          systems.length,
+        ],
+
+        [
+          "High / Critical AI Systems",
+          highRiskSystems,
+        ],
+
+        [
+          "Open Risks",
+          riskRecords.filter(
+            (risk) =>
+              risk.status !==
+              "Closed"
+          ).length,
+        ],
+
+        [
+          "Control Coverage",
+          `${controlCoverage}%`,
+        ],
+
+        [
+          "External AI Vendors",
+          vendors.length,
+        ],
+
+        [
+          "High / Critical Vendors",
+          vendors.filter(
+            (vendor) => {
+              const risk =
+                getVendorRiskLevel(
+                  getVendorRiskScore(
+                    vendor
+                  )
+                );
+
+              return (
+                risk ===
+                  "High" ||
+                risk ===
+                  "Critical"
+              );
+            }
+          ).length,
+        ],
+
+        [
+          "Open Remediation Actions",
+          openRemediation,
+        ],
+
+        [
+          "Overdue Remediation Actions",
+          overdueRemediation,
+        ],
+
+        [
+          "Completed Remediation Actions",
+          remediation.filter(
+            (action) =>
+              action.status ===
+              "Completed"
+          ).length,
+        ],
+      ]
+    );
+  }
+
+  function handleAssessmentComplete(
+    result: AssessmentResult
+  ) {
+    setAssessments(
+      (current) => [
+        result,
+        ...current,
+      ]
+    );
+
+    const system =
+      systems.find(
+        (item) =>
+          item.id ===
+          result.systemId
+      );
+
+    setSystems(
+      (current) =>
+        current.map(
+          (item) =>
+            item.id ===
+            result.systemId
+              ? {
+                  ...item,
+                  risk:
+                    result.risk,
+                  status:
+                    result.risk ===
+                      "Critical" ||
+                    result.risk ===
+                      "High"
+                      ? "Review required"
+                      : "Assessed",
+                }
+              : item
+        )
+    );
+
+    if (!system) {
+      return;
+    }
+
+    setRiskRecords(
+      (current) => {
+        const existing =
+          current.find(
+            (risk) =>
+              risk.systemId ===
+              result.systemId
+          );
+
+        if (existing) {
+          return current.map(
+            (risk) =>
+              risk.systemId ===
+              result.systemId
+                ? {
+                    ...risk,
+                    category:
+                      getRiskCategory(
+                        result
+                      ),
+                    statement:
+                      createRiskStatement(
+                        system,
+                        result
+                      ),
+                    likelihood:
+                      result.likelihood,
+                    impact:
+                      result.impact,
+                    score:
+                      result.score,
+                    risk:
+                      result.risk,
+                  }
+                : risk
+          );
+        }
+
+        const id =
+          `RISK-${String(
+            current.length + 1
+          ).padStart(
+            3,
+            "0"
+          )}`;
+
+        const residualScore =
+          Math.max(
+            1,
+            result.score - 5
+          );
+
+        return [
+          {
+            id,
+            systemId:
+              system.id,
+            systemName:
+              system.name,
+            category:
+              getRiskCategory(
+                result
+              ),
+            statement:
+              createRiskStatement(
+                system,
+                result
+              ),
+            owner:
+              system.owner,
+            likelihood:
+              result.likelihood,
+            impact:
+              result.impact,
+            score:
+              result.score,
+            risk:
+              result.risk,
+            treatment:
+              "Mitigate",
+            status:
+              "Open",
+            residualScore,
+            residualRisk:
+              getRiskLevel(
+                residualScore
+              ),
+          },
+          ...current,
+        ];
+      }
+    );
+  }
 
   if (!loggedIn) {
     return (
       <div className="login-page">
         <div className="login-brand">
-          <div className="brand-mark">A</div>
+          <div className="brand-mark">
+            A
+          </div>
 
           <div>
-            <h1>AegisAI</h1>
-            <p>Enterprise AI Risk & Governance</p>
+            <h1>
+              AegisAI
+            </h1>
+
+            <p>
+              Enterprise AI Risk &
+              Governance
+            </p>
           </div>
         </div>
 
@@ -777,21 +1611,28 @@ function App() {
               NOVABRIDGE GROUP
             </span>
 
-            <h2>Welcome back</h2>
+            <h2>
+              Welcome back
+            </h2>
 
             <p>
-              Sign in to access your AI governance workspace.
+              Sign in to access your
+              AI governance workspace.
             </p>
           </div>
 
-          <label>Work email</label>
+          <label>
+            Work email
+          </label>
 
           <input
             type="email"
             placeholder="victor@novabridge.com"
           />
 
-          <label>Password</label>
+          <label>
+            Password
+          </label>
 
           <input
             type="password"
@@ -811,7 +1652,9 @@ function App() {
 
           <button
             className="primary-button"
-            onClick={() => setLoggedIn(true)}
+            onClick={() =>
+              setLoggedIn(true)
+            }
           >
             Sign in
           </button>
@@ -839,118 +1682,6 @@ function App() {
     "Remediation",
   ];
 
-  const highRiskSystems = systems.filter(
-    (system) =>
-      system.risk === "High" ||
-      system.risk === "Critical"
-  ).length;
-
-  const controlCoverage =
-    calculateControlCoverage(controls);
-
-  const openRemediation =
-    remediation.filter(
-      (action) =>
-        action.status !== "Completed"
-    ).length;
-
-  const overdueRemediation =
-    remediation.filter(isOverdue).length;
-
-  function handleAssessmentComplete(
-    result: AssessmentResult
-  ) {
-    setAssessments((current) => [
-      result,
-      ...current,
-    ]);
-
-    const system = systems.find(
-      (item) => item.id === result.systemId
-    );
-
-    setSystems((current) =>
-      current.map((item) =>
-        item.id === result.systemId
-          ? {
-              ...item,
-              risk: result.risk,
-              status:
-                result.risk === "Critical" ||
-                result.risk === "High"
-                  ? "Review required"
-                  : "Assessed",
-            }
-          : item
-      )
-    );
-
-    if (!system) return;
-
-    setRiskRecords((current) => {
-      const existing = current.find(
-        (risk) =>
-          risk.systemId === result.systemId
-      );
-
-      if (existing) {
-        return current.map((risk) =>
-          risk.systemId === result.systemId
-            ? {
-                ...risk,
-                category:
-                  getRiskCategory(result),
-                statement:
-                  createRiskStatement(
-                    system,
-                    result
-                  ),
-                likelihood:
-                  result.likelihood,
-                impact: result.impact,
-                score: result.score,
-                risk: result.risk,
-              }
-            : risk
-        );
-      }
-
-      const id = `RISK-${String(
-        current.length + 1
-      ).padStart(3, "0")}`;
-
-      const residualScore = Math.max(
-        1,
-        result.score - 5
-      );
-
-      return [
-        {
-          id,
-          systemId: system.id,
-          systemName: system.name,
-          category: getRiskCategory(result),
-          statement:
-            createRiskStatement(
-              system,
-              result
-            ),
-          owner: system.owner,
-          likelihood: result.likelihood,
-          impact: result.impact,
-          score: result.score,
-          risk: result.risk,
-          treatment: "Mitigate",
-          status: "Open",
-          residualScore,
-          residualRisk:
-            getRiskLevel(residualScore),
-        },
-        ...current,
-      ];
-    });
-  }
-
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -960,38 +1691,55 @@ function App() {
           </div>
 
           <div>
-            <strong>AegisAI</strong>
-            <span>Governance Platform</span>
+            <strong>
+              AegisAI
+            </strong>
+
+            <span>
+              Governance Platform
+            </span>
           </div>
         </div>
 
         <div className="workspace">
-          <span>WORKSPACE</span>
-          <strong>NovaBridge Group</strong>
+          <span>
+            WORKSPACE
+          </span>
+
+          <strong>
+            NovaBridge Group
+          </strong>
         </div>
 
         <nav>
-          {pages.map((page) => (
-            <button
-              key={page}
-              className={
-                activePage === page
-                  ? "nav-item active"
-                  : "nav-item"
-              }
-              onClick={() =>
-                setActivePage(page)
-              }
-            >
-              <span className="nav-dot" />
-              {page}
-            </button>
-          ))}
+          {pages.map(
+            (page) => (
+              <button
+                key={page}
+                className={
+                  activePage ===
+                  page
+                    ? "nav-item active"
+                    : "nav-item"
+                }
+                onClick={() =>
+                  setActivePage(
+                    page
+                  )
+                }
+              >
+                <span className="nav-dot" />
+                {page}
+              </button>
+            )
+          )}
         </nav>
 
         <div className="sidebar-bottom">
           <div className="framework-card">
-            <span>NIST AI RMF</span>
+            <span>
+              NIST AI RMF
+            </span>
 
             <strong>
               Govern · Map · Measure · Manage
@@ -1008,7 +1756,9 @@ function App() {
                 Victor Abou Rjeily
               </strong>
 
-              <span>Risk Analyst</span>
+              <span>
+                Risk Analyst
+              </span>
             </div>
           </button>
         </div>
@@ -1018,27 +1768,39 @@ function App() {
         <header>
           <div>
             <p className="breadcrumb">
-              NovaBridge Group / {activePage}
+              NovaBridge Group /{" "}
+              {activePage}
             </p>
 
-            <h1>{activePage}</h1>
+            <h1>
+              {activePage}
+            </h1>
 
             <p className="subtitle">
-              Enterprise view of AI risk, governance and remediation.
+              Enterprise view of AI risk,
+              governance and remediation.
             </p>
           </div>
 
           <div className="header-actions">
-            {activePage === "AI Inventory" ? (
+            {activePage ===
+            "AI Inventory" ? (
               <>
-                <button className="secondary-button">
+                <button
+                  className="secondary-button"
+                  onClick={
+                    exportInventory
+                  }
+                >
                   Export inventory
                 </button>
 
                 <button
                   className="primary-small"
                   onClick={() =>
-                    setShowAddSystem(true)
+                    setShowAddSystem(
+                      true
+                    )
                   }
                 >
                   + Add AI system
@@ -1052,7 +1814,12 @@ function App() {
             ) : activePage ===
               "Risk Register" ? (
               <>
-                <button className="secondary-button">
+                <button
+                  className="secondary-button"
+                  onClick={
+                    exportRiskRegister
+                  }
+                >
                   Export risk register
                 </button>
 
@@ -1067,22 +1834,44 @@ function App() {
                   + New assessment
                 </button>
               </>
-            ) : activePage === "Controls" ? (
-              <button className="secondary-button">
+            ) : activePage ===
+              "Controls" ? (
+              <button
+                className="secondary-button"
+                onClick={
+                  exportControls
+                }
+              >
                 Export control matrix
               </button>
-            ) : activePage === "Vendors" ? (
-              <button className="secondary-button">
+            ) : activePage ===
+              "Vendors" ? (
+              <button
+                className="secondary-button"
+                onClick={
+                  exportVendors
+                }
+              >
                 Export vendor assessments
               </button>
             ) : activePage ===
               "Remediation" ? (
-              <button className="secondary-button">
+              <button
+                className="secondary-button"
+                onClick={
+                  exportRemediation
+                }
+              >
                 Export remediation plan
               </button>
             ) : (
               <>
-                <button className="secondary-button">
+                <button
+                  className="secondary-button"
+                  onClick={
+                    exportExecutiveReport
+                  }
+                >
                   Export report
                 </button>
 
@@ -1101,7 +1890,8 @@ function App() {
           </div>
         </header>
 
-        {activePage === "Dashboard" ? (
+        {activePage ===
+        "Dashboard" ? (
           <>
             <section className="summary-grid">
               <Metric
@@ -1126,7 +1916,8 @@ function App() {
                 value={String(
                   riskRecords.filter(
                     (risk) =>
-                      risk.status !== "Closed"
+                      risk.status !==
+                      "Closed"
                   ).length
                 )}
                 detail="Enterprise risk register"
@@ -1163,8 +1954,13 @@ function App() {
                       Overall risk
                     </span>
 
-                    <strong>68</strong>
-                    <small>/ 100</small>
+                    <strong>
+                      68
+                    </strong>
+
+                    <small>
+                      / 100
+                    </small>
                   </div>
 
                   <div className="risk-bars">
@@ -1230,7 +2026,9 @@ function App() {
                       }
                     </strong>
 
-                    <span>Critical</span>
+                    <span>
+                      Critical
+                    </span>
                   </div>
 
                   <div>
@@ -1238,7 +2036,9 @@ function App() {
                       {overdueRemediation}
                     </strong>
 
-                    <span>Overdue</span>
+                    <span>
+                      Overdue
+                    </span>
                   </div>
 
                   <div>
@@ -1252,7 +2052,9 @@ function App() {
                       }
                     </strong>
 
-                    <span>Completed</span>
+                    <span>
+                      Completed
+                    </span>
                   </div>
                 </div>
 
@@ -1296,10 +2098,21 @@ function App() {
 
                 <div className="risk-table">
                   <div className="table-row table-head">
-                    <span>AI system</span>
-                    <span>Department</span>
-                    <span>Risk</span>
-                    <span>Owner</span>
+                    <span>
+                      AI system
+                    </span>
+
+                    <span>
+                      Department
+                    </span>
+
+                    <span>
+                      Risk
+                    </span>
+
+                    <span>
+                      Owner
+                    </span>
                   </div>
 
                   {systems
@@ -1310,24 +2123,33 @@ function App() {
                         system.risk ===
                           "High"
                     )
-                    .slice(0, 4)
-                    .map((system) => (
-                      <RiskRow
-                        key={system.id}
-                        name={
-                          system.name
-                        }
-                        dept={
-                          system.department
-                        }
-                        risk={
-                          system.risk
-                        }
-                        owner={
-                          system.owner
-                        }
-                      />
-                    ))}
+                    .slice(
+                      0,
+                      4
+                    )
+                    .map(
+                      (
+                        system
+                      ) => (
+                        <RiskRow
+                          key={
+                            system.id
+                          }
+                          name={
+                            system.name
+                          }
+                          dept={
+                            system.department
+                          }
+                          risk={
+                            system.risk
+                          }
+                          owner={
+                            system.owner
+                          }
+                        />
+                      )
+                    )}
                 </div>
               </div>
 
@@ -1364,7 +2186,9 @@ function App() {
                       }
                     </strong>
 
-                    <span>Implemented</span>
+                    <span>
+                      Implemented
+                    </span>
                   </div>
 
                   <div>
@@ -1378,25 +2202,30 @@ function App() {
                       }
                     </strong>
 
-                    <span>Effective</span>
+                    <span>
+                      Effective
+                    </span>
                   </div>
 
                   <div>
                     <strong>
                       {
                         vendors.filter(
-                          (vendor) =>
-                            getVendorRiskLevel(
-                              getVendorRiskScore(
-                                vendor
-                              )
-                            ) === "High" ||
-                            getVendorRiskLevel(
-                              getVendorRiskScore(
-                                vendor
-                              )
-                            ) ===
-                              "Critical"
+                          (vendor) => {
+                            const risk =
+                              getVendorRiskLevel(
+                                getVendorRiskScore(
+                                  vendor
+                                )
+                              );
+
+                            return (
+                              risk ===
+                                "High" ||
+                              risk ===
+                                "Critical"
+                            );
+                          }
                         ).length
                       }
                     </strong>
@@ -1410,7 +2239,9 @@ function App() {
                 <button
                   className="secondary-full"
                   onClick={() =>
-                    setActivePage("Controls")
+                    setActivePage(
+                      "Controls"
+                    )
                   }
                 >
                   Open control library
@@ -1427,7 +2258,9 @@ function App() {
           "Risk Assessments" ? (
           <RiskAssessments
             systems={systems}
-            assessments={assessments}
+            assessments={
+              assessments
+            }
             onAssessmentComplete={
               handleAssessmentComplete
             }
@@ -1435,61 +2268,95 @@ function App() {
         ) : activePage ===
           "Risk Register" ? (
           <RiskRegister
-            risks={riskRecords}
-            onUpdateRisk={(updated) =>
-              setRiskRecords((current) =>
-                current.map((risk) =>
-                  risk.id === updated.id
-                    ? updated
-                    : risk
-                )
+            risks={
+              riskRecords
+            }
+            onUpdateRisk={(
+              updated
+            ) =>
+              setRiskRecords(
+                (current) =>
+                  current.map(
+                    (risk) =>
+                      risk.id ===
+                      updated.id
+                        ? updated
+                        : risk
+                  )
               )
             }
           />
         ) : activePage ===
           "Controls" ? (
           <ControlsLibrary
-            controls={controls}
-            risks={riskRecords}
-            onUpdateControl={(updated) =>
-              setControls((current) =>
-                current.map(
-                  (control) =>
-                    control.id ===
-                    updated.id
-                      ? updated
-                      : control
-                )
+            controls={
+              controls
+            }
+            risks={
+              riskRecords
+            }
+            onUpdateControl={(
+              updated
+            ) =>
+              setControls(
+                (current) =>
+                  current.map(
+                    (control) =>
+                      control.id ===
+                      updated.id
+                        ? updated
+                        : control
+                  )
               )
             }
           />
         ) : activePage ===
           "Vendors" ? (
           <VendorsModule
-            vendors={vendors}
-            systems={systems}
-            onUpdateVendor={(updated) =>
-              setVendors((current) =>
-                current.map((vendor) =>
-                  vendor.id === updated.id
-                    ? updated
-                    : vendor
-                )
+            vendors={
+              vendors
+            }
+            systems={
+              systems
+            }
+            onUpdateVendor={(
+              updated
+            ) =>
+              setVendors(
+                (current) =>
+                  current.map(
+                    (vendor) =>
+                      vendor.id ===
+                      updated.id
+                        ? updated
+                        : vendor
+                  )
               )
             }
           />
         ) : (
           <RemediationModule
-            actions={remediation}
-            risks={riskRecords}
-            controls={controls}
-            onUpdateAction={(updated) =>
-              setRemediation((current) =>
-                current.map((action) =>
-                  action.id === updated.id
-                    ? updated
-                    : action
-                )
+            actions={
+              remediation
+            }
+            risks={
+              riskRecords
+            }
+            controls={
+              controls
+            }
+            onUpdateAction={(
+              updated
+            ) =>
+              setRemediation(
+                (current) =>
+                  current.map(
+                    (action) =>
+                      action.id ===
+                      updated.id
+                        ? updated
+                        : action
+                  )
               )
             }
           />
@@ -1499,19 +2366,27 @@ function App() {
       {showAddSystem && (
         <AddSystemModal
           onClose={() =>
-            setShowAddSystem(false)
+            setShowAddSystem(
+              false
+            )
           }
           onAdd={(system) =>
-            setSystems((current) => [
-              ...current,
-              system,
-            ])
+            setSystems(
+              (current) => [
+                ...current,
+                system,
+              ]
+            )
           }
         />
       )}
     </div>
   );
 }
+
+/* =========================================================
+   REMEDIATION
+========================================================= */
 
 function RemediationModule({
   actions,
@@ -1526,78 +2401,91 @@ function RemediationModule({
     action: RemediationAction
   ) => void;
 }) {
-  const [search, setSearch] =
+  const [
+    search,
+    setSearch,
+  ] =
     useState("");
 
   const [
     priorityFilter,
     setPriorityFilter,
-  ] = useState("All");
+  ] =
+    useState("All");
 
   const [
     statusFilter,
     setStatusFilter,
-  ] = useState("All");
+  ] =
+    useState("All");
 
   const [
     selectedAction,
     setSelectedAction,
   ] =
-    useState<RemediationAction | null>(
-      null
+    useState<
+      RemediationAction | null
+    >(null);
+
+  const filtered =
+    actions.filter(
+      (action) => {
+        const q =
+          search.toLowerCase();
+
+        return (
+          (action.id
+            .toLowerCase()
+            .includes(q) ||
+            action.title
+              .toLowerCase()
+              .includes(q) ||
+            action.owner
+              .toLowerCase()
+              .includes(
+                q
+              )) &&
+          (priorityFilter ===
+            "All" ||
+            action.priority ===
+              priorityFilter) &&
+          (statusFilter ===
+            "All" ||
+            action.status ===
+              statusFilter)
+        );
+      }
     );
 
-  const filtered = actions.filter(
-    (action) => {
-      const q = search.toLowerCase();
+  const open =
+    actions.filter(
+      (action) =>
+        action.status !==
+        "Completed"
+    ).length;
 
-      const matchesSearch =
-        action.id
-          .toLowerCase()
-          .includes(q) ||
-        action.title
-          .toLowerCase()
-          .includes(q) ||
-        action.owner
-          .toLowerCase()
-          .includes(q);
-
-      const matchesPriority =
-        priorityFilter === "All" ||
-        action.priority ===
-          priorityFilter;
-
-      const matchesStatus =
-        statusFilter === "All" ||
-        action.status === statusFilter;
-
-      return (
-        matchesSearch &&
-        matchesPriority &&
-        matchesStatus
-      );
-    }
-  );
-
-  const open = actions.filter(
-    (action) =>
-      action.status !== "Completed"
-  ).length;
-
-  const priority = actions.filter(
-    (action) =>
-      (action.priority === "Critical" ||
-        action.priority === "High") &&
-      action.status !== "Completed"
-  ).length;
+  const highPriority =
+    actions.filter(
+      (action) =>
+        (action.priority ===
+          "Critical" ||
+          action.priority ===
+            "High") &&
+        action.status !==
+          "Completed"
+    ).length;
 
   const overdue =
-    actions.filter(isOverdue).length;
+    actions.filter(
+      isOverdue
+    ).length;
 
-  const completed = actions.filter(
-    (action) =>
-      action.status === "Completed"
-  ).length;
+  const completed =
+    actions.filter(
+      (action) =>
+        action.status ===
+        "Completed"
+    ).length;
 
   return (
     <>
@@ -1610,21 +2498,29 @@ function RemediationModule({
 
         <Metric
           label="High / Critical"
-          value={String(priority)}
+          value={String(
+            highPriority
+          )}
           detail="Priority remediation"
           alert
         />
 
         <Metric
           label="Overdue"
-          value={String(overdue)}
+          value={String(
+            overdue
+          )}
           detail="Past target date"
-          alert={overdue > 0}
+          alert={
+            overdue > 0
+          }
         />
 
         <Metric
           label="Completed"
-          value={String(completed)}
+          value={String(
+            completed
+          )}
           detail="Actions successfully closed"
         />
       </section>
@@ -1649,7 +2545,9 @@ function RemediationModule({
 
           <div className="remediation-filters">
             <input
-              value={search}
+              value={
+                search
+              }
               onChange={(e) =>
                 setSearch(
                   e.target.value
@@ -1659,7 +2557,9 @@ function RemediationModule({
             />
 
             <select
-              value={priorityFilter}
+              value={
+                priorityFilter
+              }
               onChange={(e) =>
                 setPriorityFilter(
                   e.target.value
@@ -1674,7 +2574,9 @@ function RemediationModule({
             </select>
 
             <select
-              value={statusFilter}
+              value={
+                statusFilter
+              }
               onChange={(e) =>
                 setStatusFilter(
                   e.target.value
@@ -1705,129 +2607,167 @@ function RemediationModule({
               <span />
             </div>
 
-            {filtered.map((action) => {
-              const overdue =
-                isOverdue(action);
+            {filtered.map(
+              (action) => {
+                const overdue =
+                  isOverdue(
+                    action
+                  );
 
-              return (
-                <div
-                  className="remediation-row"
-                  key={action.id}
-                >
-                  <strong className="remediation-id">
-                    {action.id}
-                  </strong>
-
-                  <div className="remediation-title">
-                    <strong>
-                      {action.title}
-                    </strong>
-
-                    <span>
-                      {action.description}
-                    </span>
-                  </div>
-
-                  <span>
-                    {action.owner}
-                  </span>
-
-                  <span
-                    className={`priority-pill ${action.priority.toLowerCase()}`}
-                  >
-                    {action.priority}
-                  </span>
-
-                  <span className="linked-risk-count">
-                    {
-                      action.linkedRiskIds
-                        .length
-                    }{" "}
-                    linked
-                  </span>
-
-                  <span className="linked-risk-count">
-                    {
-                      action
-                        .linkedControlIds
-                        .length
-                    }{" "}
-                    linked
-                  </span>
-
-                  <div>
-                    <span
-                      className={
-                        overdue
-                          ? "due-date overdue-date"
-                          : "due-date"
-                      }
-                    >
-                      {action.dueDate}
-                    </span>
-
-                    {overdue && (
-                      <small className="overdue-label">
-                        OVERDUE
-                      </small>
-                    )}
-                  </div>
-
-                  <span
-                    className={`remediation-status-pill ${slug(
-                      action.status
-                    )}`}
-                  >
-                    {action.status}
-                  </span>
-
-                  <div className="progress-cell">
-                    <div className="small-progress-track">
-                      <div
-                        style={{
-                          width: `${action.progress}%`,
-                        }}
-                      />
-                    </div>
-
-                    <small>
-                      {action.progress}%
-                    </small>
-                  </div>
-
-                  <button
-                    className="manage-risk-button"
-                    onClick={() =>
-                      setSelectedAction(
-                        action
-                      )
+                return (
+                  <div
+                    className="remediation-row"
+                    key={
+                      action.id
                     }
                   >
-                    Manage
-                  </button>
-                </div>
-              );
-            })}
+                    <strong className="remediation-id">
+                      {
+                        action.id
+                      }
+                    </strong>
+
+                    <div className="remediation-title">
+                      <strong>
+                        {
+                          action.title
+                        }
+                      </strong>
+
+                      <span>
+                        {
+                          action.description
+                        }
+                      </span>
+                    </div>
+
+                    <span>
+                      {
+                        action.owner
+                      }
+                    </span>
+
+                    <span
+                      className={`priority-pill ${action.priority.toLowerCase()}`}
+                    >
+                      {
+                        action.priority
+                      }
+                    </span>
+
+                    <span className="linked-risk-count">
+                      {
+                        action
+                          .linkedRiskIds
+                          .length
+                      }{" "}
+                      linked
+                    </span>
+
+                    <span className="linked-risk-count">
+                      {
+                        action
+                          .linkedControlIds
+                          .length
+                      }{" "}
+                      linked
+                    </span>
+
+                    <div>
+                      <span
+                        className={
+                          overdue
+                            ? "due-date overdue-date"
+                            : "due-date"
+                        }
+                      >
+                        {
+                          action.dueDate
+                        }
+                      </span>
+
+                      {overdue && (
+                        <small className="overdue-label">
+                          OVERDUE
+                        </small>
+                      )}
+                    </div>
+
+                    <span
+                      className={`remediation-status-pill ${slug(
+                        action.status
+                      )}`}
+                    >
+                      {
+                        action.status
+                      }
+                    </span>
+
+                    <div className="progress-cell">
+                      <div className="small-progress-track">
+                        <div
+                          style={{
+                            width: `${action.progress}%`,
+                          }}
+                        />
+                      </div>
+
+                      <small>
+                        {
+                          action.progress
+                        }
+                        %
+                      </small>
+                    </div>
+
+                    <button
+                      className="manage-risk-button"
+                      onClick={() =>
+                        setSelectedAction(
+                          action
+                        )
+                      }
+                    >
+                      Manage
+                    </button>
+                  </div>
+                );
+              }
+            )}
           </div>
         </div>
 
         <div className="inventory-footer">
-          Showing {filtered.length} of{" "}
+          Showing{" "}
+          {filtered.length} of{" "}
           {actions.length} actions
         </div>
       </section>
 
       {selectedAction && (
         <ManageRemediationModal
-          action={selectedAction}
-          risks={risks}
-          controls={controls}
+          action={
+            selectedAction
+          }
+          risks={
+            risks
+          }
+          controls={
+            controls
+          }
           onClose={() =>
-            setSelectedAction(null)
+            setSelectedAction(
+              null
+            )
           }
           onSave={(updated) => {
-            onUpdateAction(updated);
-            setSelectedAction(null);
+            onUpdateAction(
+              updated
+            );
+
+            setSelectedAction(
+              null
+            );
           }}
         />
       )}
@@ -1850,59 +2790,105 @@ function ManageRemediationModal({
     action: RemediationAction
   ) => void;
 }) {
-  const [owner, setOwner] =
-    useState(action.owner);
+  const [
+    owner,
+    setOwner,
+  ] =
+    useState(
+      action.owner
+    );
 
-  const [priority, setPriority] =
+  const [
+    priority,
+    setPriority,
+  ] =
     useState<Priority>(
       action.priority
     );
 
-  const [status, setStatus] =
+  const [
+    status,
+    setStatus,
+  ] =
     useState<RemediationStatus>(
       action.status
     );
 
-  const [dueDate, setDueDate] =
-    useState(action.dueDate);
+  const [
+    dueDate,
+    setDueDate,
+  ] =
+    useState(
+      action.dueDate
+    );
 
-  const [progress, setProgress] =
-    useState(action.progress);
+  const [
+    progress,
+    setProgress,
+  ] =
+    useState(
+      action.progress
+    );
 
-  const [notes, setNotes] =
-    useState(action.notes);
+  const [
+    notes,
+    setNotes,
+  ] =
+    useState(
+      action.notes
+    );
 
   const [
     linkedRiskIds,
     setLinkedRiskIds,
-  ] = useState<string[]>(
-    action.linkedRiskIds
-  );
+  ] =
+    useState<string[]>(
+      action.linkedRiskIds
+    );
 
   const [
     linkedControlIds,
     setLinkedControlIds,
-  ] = useState<string[]>(
-    action.linkedControlIds
-  );
+  ] =
+    useState<string[]>(
+      action.linkedControlIds
+    );
 
-  function toggleRisk(id: string) {
-    setLinkedRiskIds((current) =>
-      current.includes(id)
-        ? current.filter(
-            (item) => item !== id
-          )
-        : [...current, id]
+  function toggleRisk(
+    id: string
+  ) {
+    setLinkedRiskIds(
+      (current) =>
+        current.includes(
+          id
+        )
+          ? current.filter(
+              (item) =>
+                item !== id
+            )
+          : [
+              ...current,
+              id,
+            ]
     );
   }
 
-  function toggleControl(id: string) {
-    setLinkedControlIds((current) =>
-      current.includes(id)
-        ? current.filter(
-            (item) => item !== id
-          )
-        : [...current, id]
+  function toggleControl(
+    id: string
+  ) {
+    setLinkedControlIds(
+      (current) =>
+        current.includes(
+          id
+        )
+          ? current.filter(
+              (item) =>
+                item !== id
+            )
+          : [
+              ...current,
+              id,
+            ]
     );
   }
 
@@ -1911,46 +2897,57 @@ function ManageRemediationModal({
   ) {
     setStatus(value);
 
-    if (value === "Completed") {
-      setProgress(100);
-    }
-
     if (
-      value === "Not started" &&
-      progress === 100
+      value ===
+      "Completed"
     ) {
-      setProgress(0);
+      setProgress(100);
     }
   }
 
-  function save(e: FormEvent) {
+  function save(
+    e: FormEvent
+  ) {
     e.preventDefault();
 
-    let finalProgress = Math.min(
-      100,
-      Math.max(0, progress)
-    );
+    let finalProgress =
+      Math.min(
+        100,
+        Math.max(
+          0,
+          progress
+        )
+      );
 
-    let finalStatus = status;
+    let finalStatus =
+      status;
 
-    if (finalStatus === "Completed") {
+    if (
+      finalStatus ===
+      "Completed"
+    ) {
       finalProgress = 100;
     }
 
     if (
-      finalProgress === 100 &&
-      finalStatus !== "Completed"
+      finalProgress ===
+        100 &&
+      finalStatus !==
+        "Completed"
     ) {
-      finalStatus = "Completed";
+      finalStatus =
+        "Completed";
     }
 
     onSave({
       ...action,
       owner,
       priority,
-      status: finalStatus,
+      status:
+        finalStatus,
       dueDate,
-      progress: finalProgress,
+      progress:
+        finalProgress,
       linkedRiskIds,
       linkedControlIds,
       notes,
@@ -1961,7 +2958,9 @@ function ManageRemediationModal({
     <div className="modal-backdrop">
       <form
         className="remediation-modal"
-        onSubmit={save}
+        onSubmit={
+          save
+        }
       >
         <div className="modal-heading">
           <div>
@@ -1969,14 +2968,20 @@ function ManageRemediationModal({
               REMEDIATION ACTION
             </span>
 
-            <h2>{action.id}</h2>
+            <h2>
+              {action.id}
+            </h2>
 
-            <p>{action.title}</p>
+            <p>
+              {action.title}
+            </p>
           </div>
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             ×
           </button>
@@ -1988,29 +2993,41 @@ function ManageRemediationModal({
           </span>
 
           <p>
-            {action.description}
+            {
+              action.description
+            }
           </p>
         </div>
 
         <div className="remediation-context">
           <div>
-            <span>Linked risks</span>
+            <span>
+              Linked risks
+            </span>
 
             <strong>
-              {linkedRiskIds.length}
+              {
+                linkedRiskIds.length
+              }
             </strong>
           </div>
 
           <div>
-            <span>Linked controls</span>
+            <span>
+              Linked controls
+            </span>
 
             <strong>
-              {linkedControlIds.length}
+              {
+                linkedControlIds.length
+              }
             </strong>
           </div>
 
           <div>
-            <span>Current progress</span>
+            <span>
+              Current progress
+            </span>
 
             <strong>
               {progress}%
@@ -2023,7 +3040,9 @@ function ManageRemediationModal({
             Action owner
 
             <input
-              value={owner}
+              value={
+                owner
+              }
               onChange={(e) =>
                 setOwner(
                   e.target.value
@@ -2036,7 +3055,9 @@ function ManageRemediationModal({
             Priority
 
             <select
-              value={priority}
+              value={
+                priority
+              }
               onChange={(e) =>
                 setPriority(
                   e.target
@@ -2055,7 +3076,9 @@ function ManageRemediationModal({
             Status
 
             <select
-              value={status}
+              value={
+                status
+              }
               onChange={(e) =>
                 handleStatusChange(
                   e.target
@@ -2063,12 +3086,8 @@ function ManageRemediationModal({
                 )
               }
             >
-              <option>
-                Not started
-              </option>
-              <option>
-                In progress
-              </option>
+              <option>Not started</option>
+              <option>In progress</option>
               <option>Blocked</option>
               <option>Completed</option>
             </select>
@@ -2079,7 +3098,9 @@ function ManageRemediationModal({
 
             <input
               type="date"
-              value={dueDate}
+              value={
+                dueDate
+              }
               onChange={(e) =>
                 setDueDate(
                   e.target.value
@@ -2096,8 +3117,7 @@ function ManageRemediationModal({
             </strong>
 
             <span>
-              Update action completion from
-              0–100%.
+              Update action completion from 0–100%.
             </span>
           </div>
 
@@ -2107,7 +3127,9 @@ function ManageRemediationModal({
               min="0"
               max="100"
               step="5"
-              value={progress}
+              value={
+                progress
+              }
               onChange={(e) =>
                 setProgress(
                   Number(
@@ -2127,13 +3149,14 @@ function ManageRemediationModal({
           Progress notes / evidence
 
           <textarea
-            value={notes}
+            value={
+              notes
+            }
             onChange={(e) =>
               setNotes(
                 e.target.value
               )
             }
-            placeholder="Document work completed, dependencies, evidence or blockers..."
           />
         </label>
 
@@ -2147,34 +3170,48 @@ function ManageRemediationModal({
           </h3>
 
           <div className="risk-checkbox-list">
-            {risks.map((risk) => (
-              <label
-                className="risk-checkbox-card"
-                key={risk.id}
-              >
-                <input
-                  type="checkbox"
-                  checked={linkedRiskIds.includes(
+            {risks.map(
+              (risk) => (
+                <label
+                  className="risk-checkbox-card"
+                  key={
                     risk.id
-                  )}
-                  onChange={() =>
-                    toggleRisk(risk.id)
                   }
-                />
+                >
+                  <input
+                    type="checkbox"
+                    checked={linkedRiskIds.includes(
+                      risk.id
+                    )}
+                    onChange={() =>
+                      toggleRisk(
+                        risk.id
+                      )
+                    }
+                  />
 
-                <div>
-                  <strong>
-                    {risk.id} ·{" "}
-                    {risk.systemName}
-                  </strong>
+                  <div>
+                    <strong>
+                      {risk.id} ·{" "}
+                      {
+                        risk.systemName
+                      }
+                    </strong>
 
-                  <span>
-                    {risk.category} ·{" "}
-                    {risk.risk} risk
-                  </span>
-                </div>
-              </label>
-            ))}
+                    <span>
+                      {
+                        risk.category
+                      }{" "}
+                      ·{" "}
+                      {
+                        risk.risk
+                      }{" "}
+                      risk
+                    </span>
+                  </div>
+                </label>
+              )
+            )}
           </div>
         </div>
 
@@ -2188,36 +3225,50 @@ function ManageRemediationModal({
           </h3>
 
           <div className="risk-checkbox-list">
-            {controls.map((control) => (
-              <label
-                className="risk-checkbox-card"
-                key={control.id}
-              >
-                <input
-                  type="checkbox"
-                  checked={linkedControlIds.includes(
+            {controls.map(
+              (control) => (
+                <label
+                  className="risk-checkbox-card"
+                  key={
                     control.id
-                  )}
-                  onChange={() =>
-                    toggleControl(
-                      control.id
-                    )
                   }
-                />
+                >
+                  <input
+                    type="checkbox"
+                    checked={linkedControlIds.includes(
+                      control.id
+                    )}
+                    onChange={() =>
+                      toggleControl(
+                        control.id
+                      )
+                    }
+                  />
 
-                <div>
-                  <strong>
-                    {control.id} ·{" "}
-                    {control.name}
-                  </strong>
+                  <div>
+                    <strong>
+                      {
+                        control.id
+                      }{" "}
+                      ·{" "}
+                      {
+                        control.name
+                      }
+                    </strong>
 
-                  <span>
-                    {control.framework} ·{" "}
-                    {control.status}
-                  </span>
-                </div>
-              </label>
-            ))}
+                    <span>
+                      {
+                        control.framework
+                      }{" "}
+                      ·{" "}
+                      {
+                        control.status
+                      }
+                    </span>
+                  </div>
+                </label>
+              )
+            )}
           </div>
         </div>
 
@@ -2225,7 +3276,9 @@ function ManageRemediationModal({
           <button
             type="button"
             className="secondary-button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             Cancel
           </button>
@@ -2242,7 +3295,9 @@ function ManageRemediationModal({
   );
 }
 
-/* ---------------- VENDORS ---------------- */
+/* =========================================================
+   VENDORS
+========================================================= */
 
 function VendorsModule({
   vendors,
@@ -2255,79 +3310,106 @@ function VendorsModule({
     vendor: VendorRecord
   ) => void;
 }) {
-  const [search, setSearch] =
+  const [
+    search,
+    setSearch,
+  ] =
     useState("");
 
-  const [riskFilter, setRiskFilter] =
+  const [
+    riskFilter,
+    setRiskFilter,
+  ] =
     useState("All");
 
   const [
     statusFilter,
     setStatusFilter,
-  ] = useState("All");
+  ] =
+    useState("All");
 
   const [
     selectedVendor,
     setSelectedVendor,
   ] =
-    useState<VendorRecord | null>(
-      null
+    useState<
+      VendorRecord | null
+    >(null);
+
+  const filtered =
+    vendors.filter(
+      (vendor) => {
+        const score =
+          getVendorRiskScore(
+            vendor
+          );
+
+        const risk =
+          getVendorRiskLevel(
+            score
+          );
+
+        const q =
+          search.toLowerCase();
+
+        return (
+          (vendor.id
+            .toLowerCase()
+            .includes(q) ||
+            vendor.name
+              .toLowerCase()
+              .includes(q) ||
+            vendor.service
+              .toLowerCase()
+              .includes(q) ||
+            vendor.owner
+              .toLowerCase()
+              .includes(
+                q
+              )) &&
+          (riskFilter ===
+            "All" ||
+            risk ===
+              riskFilter) &&
+          (statusFilter ===
+            "All" ||
+            vendor.status ===
+              statusFilter)
+        );
+      }
     );
 
-  const filtered = vendors.filter(
-    (vendor) => {
-      const score =
-        getVendorRiskScore(vendor);
+  const highRisk =
+    vendors.filter(
+      (vendor) => {
+        const risk =
+          getVendorRiskLevel(
+            getVendorRiskScore(
+              vendor
+            )
+          );
 
-      const risk =
-        getVendorRiskLevel(score);
+        return (
+          risk === "High" ||
+          risk ===
+            "Critical"
+        );
+      }
+    ).length;
 
-      const q = search.toLowerCase();
+  const complete =
+    vendors.filter(
+      (vendor) =>
+        vendor.dueDiligence ===
+        "Complete"
+    ).length;
 
-      return (
-        (vendor.id
-          .toLowerCase()
-          .includes(q) ||
-          vendor.name
-            .toLowerCase()
-            .includes(q) ||
-          vendor.service
-            .toLowerCase()
-            .includes(q) ||
-          vendor.owner
-            .toLowerCase()
-            .includes(q)) &&
-        (riskFilter === "All" ||
-          risk === riskFilter) &&
-        (statusFilter === "All" ||
-          vendor.status === statusFilter)
-      );
-    }
-  );
-
-  const highRisk = vendors.filter(
-    (vendor) => {
-      const risk = getVendorRiskLevel(
-        getVendorRiskScore(vendor)
-      );
-
-      return (
-        risk === "High" ||
-        risk === "Critical"
-      );
-    }
-  ).length;
-
-  const complete = vendors.filter(
-    (vendor) =>
-      vendor.dueDiligence ===
-      "Complete"
-  ).length;
-
-  const issues = vendors.filter(
-    (vendor) =>
-      vendor.status !== "Approved"
-  ).length;
+  const issues =
+    vendors.filter(
+      (vendor) =>
+        vendor.status !==
+        "Approved"
+    ).length;
 
   return (
     <>
@@ -2342,22 +3424,30 @@ function VendorsModule({
 
         <Metric
           label="High / Critical Risk"
-          value={String(highRisk)}
+          value={String(
+            highRisk
+          )}
           detail="Priority vendor exposure"
           alert
         />
 
         <Metric
           label="Due Diligence Complete"
-          value={String(complete)}
+          value={String(
+            complete
+          )}
           detail="Vendor reviews completed"
         />
 
         <Metric
           label="Approval Issues"
-          value={String(issues)}
+          value={String(
+            issues
+          )}
           detail="Conditional or review required"
-          alert={issues > 0}
+          alert={
+            issues > 0
+          }
         />
       </section>
 
@@ -2373,16 +3463,16 @@ function VendorsModule({
             </h2>
 
             <p>
-              Assess external AI providers
-              across security, privacy,
-              resilience, compliance and
-              dependency risk.
+              Assess external AI providers across security,
+              privacy, resilience, compliance and dependency risk.
             </p>
           </div>
 
           <div className="vendors-filters">
             <input
-              value={search}
+              value={
+                search
+              }
               onChange={(e) =>
                 setSearch(
                   e.target.value
@@ -2392,7 +3482,9 @@ function VendorsModule({
             />
 
             <select
-              value={riskFilter}
+              value={
+                riskFilter
+              }
               onChange={(e) =>
                 setRiskFilter(
                   e.target.value
@@ -2407,7 +3499,9 @@ function VendorsModule({
             </select>
 
             <select
-              value={statusFilter}
+              value={
+                statusFilter
+              }
               onChange={(e) =>
                 setStatusFilter(
                   e.target.value
@@ -2417,9 +3511,7 @@ function VendorsModule({
               <option>All</option>
               <option>Approved</option>
               <option>Conditional</option>
-              <option>
-                Review required
-              </option>
+              <option>Review required</option>
               <option>Blocked</option>
             </select>
           </div>
@@ -2440,127 +3532,161 @@ function VendorsModule({
               <span />
             </div>
 
-            {filtered.map((vendor) => {
-              const score =
-                getVendorRiskScore(
-                  vendor
-                );
+            {filtered.map(
+              (vendor) => {
+                const score =
+                  getVendorRiskScore(
+                    vendor
+                  );
 
-              const risk =
-                getVendorRiskLevel(
-                  score
-                );
+                const risk =
+                  getVendorRiskLevel(
+                    score
+                  );
 
-              const linked =
-                systems.filter(
-                  (system) =>
-                    system.vendor ===
-                    vendor.name
-                );
+                const linked =
+                  systems.filter(
+                    (system) =>
+                      system.vendor ===
+                      vendor.name
+                  );
 
-              return (
-                <div
-                  className="vendors-row"
-                  key={vendor.id}
-                >
-                  <strong className="vendor-id">
-                    {vendor.id}
-                  </strong>
-
-                  <div className="vendor-name">
-                    <strong>
-                      {vendor.name}
+                return (
+                  <div
+                    className="vendors-row"
+                    key={
+                      vendor.id
+                    }
+                  >
+                    <strong className="vendor-id">
+                      {
+                        vendor.id
+                      }
                     </strong>
 
+                    <div className="vendor-name">
+                      <strong>
+                        {
+                          vendor.name
+                        }
+                      </strong>
+
+                      <span>
+                        {
+                          vendor.service
+                        }
+                      </span>
+                    </div>
+
+                    <span className="linked-risk-count">
+                      {
+                        linked.length
+                      }{" "}
+                      systems
+                    </span>
+
                     <span>
-                      {vendor.service}
+                      {
+                        vendor.dataProcessing
+                      }
                     </span>
-                  </div>
 
-                  <span className="linked-risk-count">
-                    {linked.length} systems
-                  </span>
+                    <span>
+                      {
+                        vendor.owner
+                      }
+                    </span>
 
-                  <span>
-                    {
-                      vendor.dataProcessing
-                    }
-                  </span>
-
-                  <span>
-                    {vendor.owner}
-                  </span>
-
-                  <span
-                    className={`dd-pill ${slug(
-                      vendor.dueDiligence
-                    )}`}
-                  >
-                    {
-                      vendor.dueDiligence
-                    }
-                  </span>
-
-                  <div>
                     <span
-                      className={`risk-pill ${risk.toLowerCase()}`}
+                      className={`dd-pill ${slug(
+                        vendor.dueDiligence
+                      )}`}
                     >
-                      {risk}
+                      {
+                        vendor.dueDiligence
+                      }
                     </span>
 
-                    <small className="score-small">
-                      {score}/25
-                    </small>
+                    <div>
+                      <span
+                        className={`risk-pill ${risk.toLowerCase()}`}
+                      >
+                        {
+                          risk
+                        }
+                      </span>
+
+                      <small className="score-small">
+                        {
+                          score
+                        }
+                        /25
+                      </small>
+                    </div>
+
+                    <span
+                      className={`vendor-status-pill ${slug(
+                        vendor.status
+                      )}`}
+                    >
+                      {
+                        vendor.status
+                      }
+                    </span>
+
+                    <span>
+                      {
+                        vendor.nextReview
+                      }
+                    </span>
+
+                    <button
+                      className="manage-risk-button"
+                      onClick={() =>
+                        setSelectedVendor(
+                          vendor
+                        )
+                      }
+                    >
+                      Assess
+                    </button>
                   </div>
-
-                  <span
-                    className={`vendor-status-pill ${slug(
-                      vendor.status
-                    )}`}
-                  >
-                    {vendor.status}
-                  </span>
-
-                  <span>
-                    {vendor.nextReview}
-                  </span>
-
-                  <button
-                    className="manage-risk-button"
-                    onClick={() =>
-                      setSelectedVendor(
-                        vendor
-                      )
-                    }
-                  >
-                    Assess
-                  </button>
-                </div>
-              );
-            })}
+                );
+              }
+            )}
           </div>
         </div>
 
         <div className="inventory-footer">
-          Showing {filtered.length} of{" "}
+          Showing{" "}
+          {filtered.length} of{" "}
           {vendors.length} vendors
         </div>
       </section>
 
       {selectedVendor && (
         <ManageVendorModal
-          vendor={selectedVendor}
+          vendor={
+            selectedVendor
+          }
           systems={systems.filter(
             (system) =>
               system.vendor ===
               selectedVendor.name
           )}
           onClose={() =>
-            setSelectedVendor(null)
+            setSelectedVendor(
+              null
+            )
           }
           onSave={(updated) => {
-            onUpdateVendor(updated);
-            setSelectedVendor(null);
+            onUpdateVendor(
+              updated
+            );
+
+            setSelectedVendor(
+              null
+            );
           }}
         />
       )}
@@ -2581,10 +3707,18 @@ function ManageVendorModal({
     vendor: VendorRecord
   ) => void;
 }) {
-  const [owner, setOwner] =
-    useState(vendor.owner);
+  const [
+    owner,
+    setOwner,
+  ] =
+    useState(
+      vendor.owner
+    );
 
-  const [status, setStatus] =
+  const [
+    status,
+    setStatus,
+  ] =
     useState<VendorStatus>(
       vendor.status
     );
@@ -2600,71 +3734,92 @@ function ManageVendorModal({
   const [
     dataProcessing,
     setDataProcessing,
-  ] = useState(
-    vendor.dataProcessing
-  );
+  ] =
+    useState(
+      vendor.dataProcessing
+    );
 
   const [
     securityRisk,
     setSecurityRisk,
-  ] = useState(
-    vendor.securityRisk
-  );
+  ] =
+    useState(
+      vendor.securityRisk
+    );
 
   const [
     privacyRisk,
     setPrivacyRisk,
-  ] = useState(
-    vendor.privacyRisk
-  );
+  ] =
+    useState(
+      vendor.privacyRisk
+    );
 
   const [
     resilienceRisk,
     setResilienceRisk,
-  ] = useState(
-    vendor.resilienceRisk
-  );
+  ] =
+    useState(
+      vendor.resilienceRisk
+    );
 
   const [
     complianceRisk,
     setComplianceRisk,
-  ] = useState(
-    vendor.complianceRisk
-  );
+  ] =
+    useState(
+      vendor.complianceRisk
+    );
 
   const [
     dependencyRisk,
     setDependencyRisk,
-  ] = useState(
-    vendor.dependencyRisk
-  );
+  ] =
+    useState(
+      vendor.dependencyRisk
+    );
 
-  const [evidence, setEvidence] =
-    useState(vendor.evidence);
-
-  const [nextReview, setNextReview] =
-    useState(vendor.nextReview);
-
-  const preview: VendorRecord = {
-    ...vendor,
-    owner,
-    status,
-    dueDiligence,
-    dataProcessing,
-    securityRisk,
-    privacyRisk,
-    resilienceRisk,
-    complianceRisk,
-    dependencyRisk,
+  const [
     evidence,
+    setEvidence,
+  ] =
+    useState(
+      vendor.evidence
+    );
+
+  const [
     nextReview,
-  };
+    setNextReview,
+  ] =
+    useState(
+      vendor.nextReview
+    );
+
+  const preview: VendorRecord =
+    {
+      ...vendor,
+      owner,
+      status,
+      dueDiligence,
+      dataProcessing,
+      securityRisk,
+      privacyRisk,
+      resilienceRisk,
+      complianceRisk,
+      dependencyRisk,
+      evidence,
+      nextReview,
+    };
 
   const score =
-    getVendorRiskScore(preview);
+    getVendorRiskScore(
+      preview
+    );
 
   const risk =
-    getVendorRiskLevel(score);
+    getVendorRiskLevel(
+      score
+    );
 
   return (
     <div className="modal-backdrop">
@@ -2672,7 +3827,10 @@ function ManageVendorModal({
         className="vendor-modal"
         onSubmit={(e) => {
           e.preventDefault();
-          onSave(preview);
+
+          onSave(
+            preview
+          );
         }}
       >
         <div className="modal-heading">
@@ -2681,7 +3839,9 @@ function ManageVendorModal({
               THIRD-PARTY AI RISK
             </span>
 
-            <h2>{vendor.name}</h2>
+            <h2>
+              {vendor.name}
+            </h2>
 
             <p>
               {vendor.id} ·{" "}
@@ -2691,7 +3851,9 @@ function ManageVendorModal({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             ×
           </button>
@@ -2703,8 +3865,13 @@ function ManageVendorModal({
               Vendor risk score
             </span>
 
-            <strong>{score}</strong>
-            <small>/25</small>
+            <strong>
+              {score}
+            </strong>
+
+            <small>
+              /25
+            </small>
           </div>
 
           <span
@@ -2721,12 +3888,23 @@ function ManageVendorModal({
 
           <div className="vendor-system-chips">
             {systems.length ? (
-              systems.map((system) => (
-                <span key={system.id}>
-                  {system.name} ·{" "}
-                  {system.department}
-                </span>
-              ))
+              systems.map(
+                (system) => (
+                  <span
+                    key={
+                      system.id
+                    }
+                  >
+                    {
+                      system.name
+                    }{" "}
+                    ·{" "}
+                    {
+                      system.department
+                    }
+                  </span>
+                )
+              )
             ) : (
               <span>
                 No linked systems
@@ -2740,7 +3918,9 @@ function ManageVendorModal({
             Vendor owner
 
             <input
-              value={owner}
+              value={
+                owner
+              }
               onChange={(e) =>
                 setOwner(
                   e.target.value
@@ -2753,7 +3933,9 @@ function ManageVendorModal({
             Approval status
 
             <select
-              value={status}
+              value={
+                status
+              }
               onChange={(e) =>
                 setStatus(
                   e.target
@@ -2763,9 +3945,7 @@ function ManageVendorModal({
             >
               <option>Approved</option>
               <option>Conditional</option>
-              <option>
-                Review required
-              </option>
+              <option>Review required</option>
               <option>Blocked</option>
             </select>
           </label>
@@ -2774,7 +3954,9 @@ function ManageVendorModal({
             Due diligence
 
             <select
-              value={dueDiligence}
+              value={
+                dueDiligence
+              }
               onChange={(e) =>
                 setDueDiligence(
                   e.target
@@ -2793,7 +3975,9 @@ function ManageVendorModal({
 
             <input
               type="date"
-              value={nextReview}
+              value={
+                nextReview
+              }
               onChange={(e) =>
                 setNextReview(
                   e.target.value
@@ -2807,7 +3991,9 @@ function ManageVendorModal({
           Data processed by vendor
 
           <textarea
-            value={dataProcessing}
+            value={
+              dataProcessing
+            }
             onChange={(e) =>
               setDataProcessing(
                 e.target.value
@@ -2822,38 +4008,57 @@ function ManageVendorModal({
           </span>
 
           <h3>
-            Score each area from 1
-            (low) to 5 (very high)
+            Score each area from 1 to 5
           </h3>
 
           <VendorRiskFactor
             label="Cybersecurity risk"
-            value={securityRisk}
-            onChange={setSecurityRisk}
+            value={
+              securityRisk
+            }
+            onChange={
+              setSecurityRisk
+            }
           />
 
           <VendorRiskFactor
             label="Privacy & data risk"
-            value={privacyRisk}
-            onChange={setPrivacyRisk}
+            value={
+              privacyRisk
+            }
+            onChange={
+              setPrivacyRisk
+            }
           />
 
           <VendorRiskFactor
             label="Operational resilience"
-            value={resilienceRisk}
-            onChange={setResilienceRisk}
+            value={
+              resilienceRisk
+            }
+            onChange={
+              setResilienceRisk
+            }
           />
 
           <VendorRiskFactor
             label="Compliance risk"
-            value={complianceRisk}
-            onChange={setComplianceRisk}
+            value={
+              complianceRisk
+            }
+            onChange={
+              setComplianceRisk
+            }
           />
 
           <VendorRiskFactor
             label="Concentration dependency"
-            value={dependencyRisk}
-            onChange={setDependencyRisk}
+            value={
+              dependencyRisk
+            }
+            onChange={
+              setDependencyRisk
+            }
           />
         </div>
 
@@ -2861,7 +4066,9 @@ function ManageVendorModal({
           Due diligence evidence / notes
 
           <textarea
-            value={evidence}
+            value={
+              evidence
+            }
             onChange={(e) =>
               setEvidence(
                 e.target.value
@@ -2874,7 +4081,9 @@ function ManageVendorModal({
           <button
             type="button"
             className="secondary-button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             Cancel
           </button>
@@ -2898,25 +4107,34 @@ function VendorRiskFactor({
 }: {
   label: string;
   value: number;
-  onChange: (value: number) => void;
+  onChange: (
+    value: number
+  ) => void;
 }) {
   return (
     <div className="vendor-factor">
-      <strong>{label}</strong>
+      <strong>
+        {label}
+      </strong>
 
       <div className="vendor-score-options">
         {[1, 2, 3, 4, 5].map(
           (score) => (
             <button
               type="button"
-              key={score}
+              key={
+                score
+              }
               className={
-                value === score
+                value ===
+                score
                   ? "vendor-score selected"
                   : "vendor-score"
               }
               onClick={() =>
-                onChange(score)
+                onChange(
+                  score
+                )
               }
             >
               {score}
@@ -2928,7 +4146,9 @@ function VendorRiskFactor({
   );
 }
 
-/* ---------------- CONTROLS ---------------- */
+/* =========================================================
+   CONTROLS
+========================================================= */
 
 function ControlsLibrary({
   controls,
@@ -2941,53 +4161,64 @@ function ControlsLibrary({
     control: ControlRecord
   ) => void;
 }) {
-  const [search, setSearch] =
+  const [
+    search,
+    setSearch,
+  ] =
     useState("");
 
   const [
     frameworkFilter,
     setFrameworkFilter,
-  ] = useState("All");
+  ] =
+    useState("All");
 
   const [
     statusFilter,
     setStatusFilter,
-  ] = useState("All");
+  ] =
+    useState("All");
 
   const [
     selectedControl,
     setSelectedControl,
   ] =
-    useState<ControlRecord | null>(
-      null
+    useState<
+      ControlRecord | null
+    >(null);
+
+  const filtered =
+    controls.filter(
+      (control) => {
+        const q =
+          search.toLowerCase();
+
+        return (
+          (control.id
+            .toLowerCase()
+            .includes(q) ||
+            control.name
+              .toLowerCase()
+              .includes(q) ||
+            control.category
+              .toLowerCase()
+              .includes(q) ||
+            control.owner
+              .toLowerCase()
+              .includes(
+                q
+              )) &&
+          (frameworkFilter ===
+            "All" ||
+            control.framework ===
+              frameworkFilter) &&
+          (statusFilter ===
+            "All" ||
+            control.status ===
+              statusFilter)
+        );
+      }
     );
-
-  const filtered = controls.filter(
-    (control) => {
-      const q = search.toLowerCase();
-
-      return (
-        (control.id
-          .toLowerCase()
-          .includes(q) ||
-          control.name
-            .toLowerCase()
-            .includes(q) ||
-          control.category
-            .toLowerCase()
-            .includes(q) ||
-          control.owner
-            .toLowerCase()
-            .includes(q)) &&
-        (frameworkFilter === "All" ||
-          control.framework ===
-            frameworkFilter) &&
-        (statusFilter === "All" ||
-          control.status ===
-            statusFilter)
-      );
-    }
-  );
 
   return (
     <>
@@ -3060,7 +4291,9 @@ function ControlsLibrary({
 
           <div className="controls-filters">
             <input
-              value={search}
+              value={
+                search
+              }
               onChange={(e) =>
                 setSearch(
                   e.target.value
@@ -3070,7 +4303,9 @@ function ControlsLibrary({
             />
 
             <select
-              value={frameworkFilter}
+              value={
+                frameworkFilter
+              }
               onChange={(e) =>
                 setFrameworkFilter(
                   e.target.value
@@ -3085,7 +4320,9 @@ function ControlsLibrary({
             </select>
 
             <select
-              value={statusFilter}
+              value={
+                statusFilter
+              }
               onChange={(e) =>
                 setStatusFilter(
                   e.target.value
@@ -3096,9 +4333,7 @@ function ControlsLibrary({
               <option>Implemented</option>
               <option>Partial</option>
               <option>Planned</option>
-              <option>
-                Not implemented
-              </option>
+              <option>Not implemented</option>
             </select>
           </div>
         </div>
@@ -3118,93 +4353,125 @@ function ControlsLibrary({
               <span />
             </div>
 
-            {filtered.map((control) => (
-              <div
-                className="controls-row"
-                key={control.id}
-              >
-                <strong className="control-id">
-                  {control.id}
-                </strong>
-
-                <div className="control-name">
-                  <strong>
-                    {control.name}
+            {filtered.map(
+              (control) => (
+                <div
+                  className="controls-row"
+                  key={
+                    control.id
+                  }
+                >
+                  <strong className="control-id">
+                    {
+                      control.id
+                    }
                   </strong>
 
-                  <span>
-                    {control.description}
+                  <div className="control-name">
+                    <strong>
+                      {
+                        control.name
+                      }
+                    </strong>
+
+                    <span>
+                      {
+                        control.description
+                      }
+                    </span>
+                  </div>
+
+                  <span className="framework-control-pill">
+                    {
+                      control.framework
+                    }
                   </span>
-                </div>
 
-                <span className="framework-control-pill">
-                  {control.framework}
-                </span>
+                  <span>
+                    {
+                      control.category
+                    }
+                  </span>
 
-                <span>
-                  {control.category}
-                </span>
+                  <span>
+                    {
+                      control.owner
+                    }
+                  </span>
 
-                <span>
-                  {control.owner}
-                </span>
-
-                <span className="linked-risk-count">
-                  {
-                    control.linkedRiskIds
-                      .length
-                  }{" "}
-                  linked
-                </span>
-
-                <span
-                  className={`control-status-pill ${slug(
-                    control.status
-                  )}`}
-                >
-                  {control.status}
-                </span>
-
-                <span
-                  className={`effectiveness-pill ${slug(
-                    control.effectiveness
-                  )}`}
-                >
-                  {
-                    control.effectiveness
-                  }
-                </span>
-
-                <span>
-                  {control.reviewDate}
-                </span>
-
-                <button
-                  className="manage-risk-button"
-                  onClick={() =>
-                    setSelectedControl(
+                  <span className="linked-risk-count">
+                    {
                       control
-                    )
-                  }
-                >
-                  Manage
-                </button>
-              </div>
-            ))}
+                        .linkedRiskIds
+                        .length
+                    }{" "}
+                    linked
+                  </span>
+
+                  <span
+                    className={`control-status-pill ${slug(
+                      control.status
+                    )}`}
+                  >
+                    {
+                      control.status
+                    }
+                  </span>
+
+                  <span
+                    className={`effectiveness-pill ${slug(
+                      control.effectiveness
+                    )}`}
+                  >
+                    {
+                      control.effectiveness
+                    }
+                  </span>
+
+                  <span>
+                    {
+                      control.reviewDate
+                    }
+                  </span>
+
+                  <button
+                    className="manage-risk-button"
+                    onClick={() =>
+                      setSelectedControl(
+                        control
+                      )
+                    }
+                  >
+                    Manage
+                  </button>
+                </div>
+              )
+            )}
           </div>
         </div>
       </section>
 
       {selectedControl && (
         <ManageControlModal
-          control={selectedControl}
-          risks={risks}
+          control={
+            selectedControl
+          }
+          risks={
+            risks
+          }
           onClose={() =>
-            setSelectedControl(null)
+            setSelectedControl(
+              null
+            )
           }
           onSave={(updated) => {
-            onUpdateControl(updated);
-            setSelectedControl(null);
+            onUpdateControl(
+              updated
+            );
+
+            setSelectedControl(
+              null
+            );
           }}
         />
       )}
@@ -3225,10 +4492,18 @@ function ManageControlModal({
     control: ControlRecord
   ) => void;
 }) {
-  const [owner, setOwner] =
-    useState(control.owner);
+  const [
+    owner,
+    setOwner,
+  ] =
+    useState(
+      control.owner
+    );
 
-  const [status, setStatus] =
+  const [
+    status,
+    setStatus,
+  ] =
     useState<ControlStatus>(
       control.status
     );
@@ -3241,26 +4516,46 @@ function ManageControlModal({
       control.effectiveness
     );
 
-  const [evidence, setEvidence] =
-    useState(control.evidence);
+  const [
+    evidence,
+    setEvidence,
+  ] =
+    useState(
+      control.evidence
+    );
 
-  const [reviewDate, setReviewDate] =
-    useState(control.reviewDate);
+  const [
+    reviewDate,
+    setReviewDate,
+  ] =
+    useState(
+      control.reviewDate
+    );
 
   const [
     linkedRiskIds,
     setLinkedRiskIds,
-  ] = useState<string[]>(
-    control.linkedRiskIds
-  );
+  ] =
+    useState<string[]>(
+      control.linkedRiskIds
+    );
 
-  function toggleRisk(id: string) {
-    setLinkedRiskIds((current) =>
-      current.includes(id)
-        ? current.filter(
-            (item) => item !== id
-          )
-        : [...current, id]
+  function toggleRisk(
+    id: string
+  ) {
+    setLinkedRiskIds(
+      (current) =>
+        current.includes(
+          id
+        )
+          ? current.filter(
+              (item) =>
+                item !== id
+            )
+          : [
+              ...current,
+              id,
+            ]
     );
   }
 
@@ -3288,21 +4583,35 @@ function ManageControlModal({
               CONTROL ASSURANCE
             </span>
 
-            <h2>{control.id}</h2>
-            <p>{control.name}</p>
+            <h2>
+              {control.id}
+            </h2>
+
+            <p>
+              {control.name}
+            </p>
           </div>
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             ×
           </button>
         </div>
 
         <div className="control-description-card">
-          <span>Control objective</span>
-          <p>{control.description}</p>
+          <span>
+            Control objective
+          </span>
+
+          <p>
+            {
+              control.description
+            }
+          </p>
         </div>
 
         <div className="modal-grid">
@@ -3310,7 +4619,9 @@ function ManageControlModal({
             Control owner
 
             <input
-              value={owner}
+              value={
+                owner
+              }
               onChange={(e) =>
                 setOwner(
                   e.target.value
@@ -3323,7 +4634,9 @@ function ManageControlModal({
             Implementation status
 
             <select
-              value={status}
+              value={
+                status
+              }
               onChange={(e) =>
                 setStatus(
                   e.target
@@ -3334,9 +4647,7 @@ function ManageControlModal({
               <option>Implemented</option>
               <option>Partial</option>
               <option>Planned</option>
-              <option>
-                Not implemented
-              </option>
+              <option>Not implemented</option>
             </select>
           </label>
 
@@ -3344,7 +4655,9 @@ function ManageControlModal({
             Effectiveness
 
             <select
-              value={effectiveness}
+              value={
+                effectiveness
+              }
               onChange={(e) =>
                 setEffectiveness(
                   e.target
@@ -3353,9 +4666,7 @@ function ManageControlModal({
               }
             >
               <option>Effective</option>
-              <option>
-                Partially effective
-              </option>
+              <option>Partially effective</option>
               <option>Not tested</option>
               <option>Ineffective</option>
             </select>
@@ -3366,7 +4677,9 @@ function ManageControlModal({
 
             <input
               type="date"
-              value={reviewDate}
+              value={
+                reviewDate
+              }
               onChange={(e) =>
                 setReviewDate(
                   e.target.value
@@ -3380,7 +4693,9 @@ function ManageControlModal({
           Evidence / assurance notes
 
           <textarea
-            value={evidence}
+            value={
+              evidence
+            }
             onChange={(e) =>
               setEvidence(
                 e.target.value
@@ -3395,33 +4710,43 @@ function ManageControlModal({
           </span>
 
           <div className="risk-checkbox-list">
-            {risks.map((risk) => (
-              <label
-                className="risk-checkbox-card"
-                key={risk.id}
-              >
-                <input
-                  type="checkbox"
-                  checked={linkedRiskIds.includes(
+            {risks.map(
+              (risk) => (
+                <label
+                  className="risk-checkbox-card"
+                  key={
                     risk.id
-                  )}
-                  onChange={() =>
-                    toggleRisk(risk.id)
                   }
-                />
+                >
+                  <input
+                    type="checkbox"
+                    checked={linkedRiskIds.includes(
+                      risk.id
+                    )}
+                    onChange={() =>
+                      toggleRisk(
+                        risk.id
+                      )
+                    }
+                  />
 
-                <div>
-                  <strong>
-                    {risk.id} ·{" "}
-                    {risk.systemName}
-                  </strong>
+                  <div>
+                    <strong>
+                      {risk.id} ·{" "}
+                      {
+                        risk.systemName
+                      }
+                    </strong>
 
-                  <span>
-                    {risk.category}
-                  </span>
-                </div>
-              </label>
-            ))}
+                    <span>
+                      {
+                        risk.category
+                      }
+                    </span>
+                  </div>
+                </label>
+              )
+            )}
           </div>
         </div>
 
@@ -3429,7 +4754,9 @@ function ManageControlModal({
           <button
             type="button"
             className="secondary-button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             Cancel
           </button>
@@ -3446,7 +4773,9 @@ function ManageControlModal({
   );
 }
 
-/* ---------------- RISK REGISTER ---------------- */
+/* =========================================================
+   RISK REGISTER
+========================================================= */
 
 function RiskRegister({
   risks,
@@ -3457,56 +4786,73 @@ function RiskRegister({
     risk: RiskRecord
   ) => void;
 }) {
-  const [search, setSearch] =
+  const [
+    search,
+    setSearch,
+  ] =
     useState("");
 
-  const [riskFilter, setRiskFilter] =
+  const [
+    riskFilter,
+    setRiskFilter,
+  ] =
     useState("All");
 
   const [
     statusFilter,
     setStatusFilter,
-  ] = useState("All");
+  ] =
+    useState("All");
 
   const [
     selectedRisk,
     setSelectedRisk,
   ] =
-    useState<RiskRecord | null>(
-      null
+    useState<
+      RiskRecord | null
+    >(null);
+
+  const filtered =
+    risks.filter(
+      (risk) => {
+        const q =
+          search.toLowerCase();
+
+        return (
+          (risk.id
+            .toLowerCase()
+            .includes(q) ||
+            risk.systemName
+              .toLowerCase()
+              .includes(q) ||
+            risk.category
+              .toLowerCase()
+              .includes(q) ||
+            risk.owner
+              .toLowerCase()
+              .includes(
+                q
+              )) &&
+          (riskFilter ===
+            "All" ||
+            risk.risk ===
+              riskFilter) &&
+          (statusFilter ===
+            "All" ||
+            risk.status ===
+              statusFilter)
+        );
+      }
     );
-
-  const filtered = risks.filter(
-    (risk) => {
-      const q = search.toLowerCase();
-
-      return (
-        (risk.id
-          .toLowerCase()
-          .includes(q) ||
-          risk.systemName
-            .toLowerCase()
-            .includes(q) ||
-          risk.category
-            .toLowerCase()
-            .includes(q) ||
-          risk.owner
-            .toLowerCase()
-            .includes(q)) &&
-        (riskFilter === "All" ||
-          risk.risk === riskFilter) &&
-        (statusFilter === "All" ||
-          risk.status === statusFilter)
-      );
-    }
-  );
 
   return (
     <>
       <section className="risk-register-summary">
         <Metric
           label="Total Risks"
-          value={String(risks.length)}
+          value={String(
+            risks.length
+          )}
           detail="Registered AI risks"
         />
 
@@ -3515,8 +4861,10 @@ function RiskRegister({
           value={String(
             risks.filter(
               (risk) =>
-                risk.risk === "High" ||
-                risk.risk === "Critical"
+                risk.risk ===
+                  "High" ||
+                risk.risk ===
+                  "Critical"
             ).length
           )}
           detail="Priority exposure"
@@ -3555,18 +4903,21 @@ function RiskRegister({
               ENTERPRISE RISK REGISTER
             </span>
 
-            <h2>AI Risk Register</h2>
+            <h2>
+              AI Risk Register
+            </h2>
 
             <p>
-              Track inherent risk,
-              ownership, treatment decisions
-              and residual exposure.
+              Track inherent risk, ownership,
+              treatment decisions and residual exposure.
             </p>
           </div>
 
           <div className="risk-register-filters">
             <input
-              value={search}
+              value={
+                search
+              }
               onChange={(e) =>
                 setSearch(
                   e.target.value
@@ -3576,7 +4927,9 @@ function RiskRegister({
             />
 
             <select
-              value={riskFilter}
+              value={
+                riskFilter
+              }
               onChange={(e) =>
                 setRiskFilter(
                   e.target.value
@@ -3591,7 +4944,9 @@ function RiskRegister({
             </select>
 
             <select
-              value={statusFilter}
+              value={
+                statusFilter
+              }
               onChange={(e) =>
                 setStatusFilter(
                   e.target.value
@@ -3600,9 +4955,7 @@ function RiskRegister({
             >
               <option>All</option>
               <option>Open</option>
-              <option>
-                In progress
-              </option>
+              <option>In progress</option>
               <option>Accepted</option>
               <option>Closed</option>
             </select>
@@ -3623,94 +4976,131 @@ function RiskRegister({
               <span />
             </div>
 
-            {filtered.map((risk) => (
-              <div
-                className="risk-register-row"
-                key={risk.id}
-              >
-                <strong className="risk-id">
-                  {risk.id}
-                </strong>
-
-                <div className="risk-system">
-                  <strong>
-                    {risk.systemName}
-                  </strong>
-
-                  <span>
-                    {risk.statement}
-                  </span>
-                </div>
-
-                <span>
-                  {risk.category}
-                </span>
-
-                <span>
-                  {risk.owner}
-                </span>
-
-                <div>
-                  <span
-                    className={`risk-pill ${risk.risk.toLowerCase()}`}
-                  >
-                    {risk.risk}
-                  </span>
-
-                  <small className="score-small">
-                    {risk.score}/25
-                  </small>
-                </div>
-
-                <span className="treatment-pill">
-                  {risk.treatment}
-                </span>
-
-                <span
-                  className={`status-pill ${slug(
-                    risk.status
-                  )}`}
-                >
-                  {risk.status}
-                </span>
-
-                <div>
-                  <span
-                    className={`risk-pill ${risk.residualRisk.toLowerCase()}`}
-                  >
-                    {risk.residualRisk}
-                  </span>
-
-                  <small className="score-small">
-                    {risk.residualScore}/25
-                  </small>
-                </div>
-
-                <button
-                  className="manage-risk-button"
-                  onClick={() =>
-                    setSelectedRisk(
-                      risk
-                    )
+            {filtered.map(
+              (risk) => (
+                <div
+                  className="risk-register-row"
+                  key={
+                    risk.id
                   }
                 >
-                  Manage
-                </button>
-              </div>
-            ))}
+                  <strong className="risk-id">
+                    {
+                      risk.id
+                    }
+                  </strong>
+
+                  <div className="risk-system">
+                    <strong>
+                      {
+                        risk.systemName
+                      }
+                    </strong>
+
+                    <span>
+                      {
+                        risk.statement
+                      }
+                    </span>
+                  </div>
+
+                  <span>
+                    {
+                      risk.category
+                    }
+                  </span>
+
+                  <span>
+                    {
+                      risk.owner
+                    }
+                  </span>
+
+                  <div>
+                    <span
+                      className={`risk-pill ${risk.risk.toLowerCase()}`}
+                    >
+                      {
+                        risk.risk
+                      }
+                    </span>
+
+                    <small className="score-small">
+                      {
+                        risk.score
+                      }
+                      /25
+                    </small>
+                  </div>
+
+                  <span className="treatment-pill">
+                    {
+                      risk.treatment
+                    }
+                  </span>
+
+                  <span
+                    className={`status-pill ${slug(
+                      risk.status
+                    )}`}
+                  >
+                    {
+                      risk.status
+                    }
+                  </span>
+
+                  <div>
+                    <span
+                      className={`risk-pill ${risk.residualRisk.toLowerCase()}`}
+                    >
+                      {
+                        risk.residualRisk
+                      }
+                    </span>
+
+                    <small className="score-small">
+                      {
+                        risk.residualScore
+                      }
+                      /25
+                    </small>
+                  </div>
+
+                  <button
+                    className="manage-risk-button"
+                    onClick={() =>
+                      setSelectedRisk(
+                        risk
+                      )
+                    }
+                  >
+                    Manage
+                  </button>
+                </div>
+              )
+            )}
           </div>
         </div>
       </section>
 
       {selectedRisk && (
         <ManageRiskModal
-          risk={selectedRisk}
+          risk={
+            selectedRisk
+          }
           onClose={() =>
-            setSelectedRisk(null)
+            setSelectedRisk(
+              null
+            )
           }
           onSave={(updated) => {
-            onUpdateRisk(updated);
-            setSelectedRisk(null);
+            onUpdateRisk(
+              updated
+            );
+
+            setSelectedRisk(
+              null
+            );
           }}
         />
       )}
@@ -3729,21 +5119,39 @@ function ManageRiskModal({
     risk: RiskRecord
   ) => void;
 }) {
-  const [owner, setOwner] =
-    useState(risk.owner);
+  const [
+    owner,
+    setOwner,
+  ] =
+    useState(
+      risk.owner
+    );
 
-  const [treatment, setTreatment] =
-    useState(risk.treatment);
+  const [
+    treatment,
+    setTreatment,
+  ] =
+    useState(
+      risk.treatment
+    );
 
-  const [status, setStatus] =
-    useState(risk.status);
+  const [
+    status,
+    setStatus,
+  ] =
+    useState(
+      risk.status
+    );
 
   const [
     residualScore,
     setResidualScore,
-  ] = useState(
-    String(risk.residualScore)
-  );
+  ] =
+    useState(
+      String(
+        risk.residualScore
+      )
+    );
 
   return (
     <div className="modal-backdrop">
@@ -3752,24 +5160,28 @@ function ManageRiskModal({
         onSubmit={(e) => {
           e.preventDefault();
 
-          const score = Math.min(
-            25,
-            Math.max(
-              1,
-              Number(
-                residualScore
-              ) || 1
-            )
-          );
+          const score =
+            Math.min(
+              25,
+              Math.max(
+                1,
+                Number(
+                  residualScore
+                ) || 1
+              )
+            );
 
           onSave({
             ...risk,
             owner,
             treatment,
             status,
-            residualScore: score,
+            residualScore:
+              score,
             residualRisk:
-              getRiskLevel(score),
+              getRiskLevel(
+                score
+              ),
           });
         }}
       >
@@ -3779,21 +5191,37 @@ function ManageRiskModal({
               RISK TREATMENT
             </span>
 
-            <h2>{risk.id}</h2>
-            <p>{risk.systemName}</p>
+            <h2>
+              {risk.id}
+            </h2>
+
+            <p>
+              {
+                risk.systemName
+              }
+            </p>
           </div>
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             ×
           </button>
         </div>
 
         <div className="risk-modal-statement">
-          <span>Risk statement</span>
-          <p>{risk.statement}</p>
+          <span>
+            Risk statement
+          </span>
+
+          <p>
+            {
+              risk.statement
+            }
+          </p>
         </div>
 
         <div className="modal-grid">
@@ -3801,7 +5229,9 @@ function ManageRiskModal({
             Risk owner
 
             <input
-              value={owner}
+              value={
+                owner
+              }
               onChange={(e) =>
                 setOwner(
                   e.target.value
@@ -3814,7 +5244,9 @@ function ManageRiskModal({
             Treatment
 
             <select
-              value={treatment}
+              value={
+                treatment
+              }
               onChange={(e) =>
                 setTreatment(
                   e.target.value
@@ -3833,7 +5265,9 @@ function ManageRiskModal({
             Status
 
             <select
-              value={status}
+              value={
+                status
+              }
               onChange={(e) =>
                 setStatus(
                   e.target.value
@@ -3841,9 +5275,7 @@ function ManageRiskModal({
               }
             >
               <option>Open</option>
-              <option>
-                In progress
-              </option>
+              <option>In progress</option>
               <option>Accepted</option>
               <option>Closed</option>
             </select>
@@ -3856,7 +5288,9 @@ function ManageRiskModal({
               type="number"
               min="1"
               max="25"
-              value={residualScore}
+              value={
+                residualScore
+              }
               onChange={(e) =>
                 setResidualScore(
                   e.target.value
@@ -3870,7 +5304,9 @@ function ManageRiskModal({
           <button
             type="button"
             className="secondary-button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             Cancel
           </button>
@@ -3887,7 +5323,9 @@ function ManageRiskModal({
   );
 }
 
-/* ---------------- ASSESSMENTS ---------------- */
+/* =========================================================
+   ASSESSMENTS
+========================================================= */
 
 function RiskAssessments({
   systems,
@@ -3903,17 +5341,30 @@ function RiskAssessments({
   const [
     selectedSystemId,
     setSelectedSystemId,
-  ] = useState<number>(
-    systems[0]?.id ?? 0
-  );
-
-  const [answers, setAnswers] =
-    useState<Record<string, number>>({});
-
-  const [result, setResult] =
-    useState<AssessmentResult | null>(
-      null
+  ] =
+    useState<number>(
+      systems[0]?.id ??
+        0
     );
+
+  const [
+    answers,
+    setAnswers,
+  ] =
+    useState<
+      Record<
+        string,
+        number
+      >
+    >({});
+
+  const [
+    result,
+    setResult,
+  ] =
+    useState<
+      AssessmentResult | null
+    >(null);
 
   const selectedSystem =
     systems.find(
@@ -3923,16 +5374,23 @@ function RiskAssessments({
     );
 
   const answeredCount =
-    Object.keys(answers).length;
+    Object.keys(
+      answers
+    ).length;
 
-  const completion = Math.round(
-    (answeredCount /
-      assessmentQuestions.length) *
-      100
-  );
+  const completion =
+    Math.round(
+      (answeredCount /
+        assessmentQuestions.length) *
+        100
+    );
 
   function calculateAssessment() {
-    if (!selectedSystem) return;
+    if (
+      !selectedSystem
+    ) {
+      return;
+    }
 
     if (
       answeredCount !==
@@ -3941,55 +5399,67 @@ function RiskAssessments({
       alert(
         "Please answer all assessment questions first."
       );
+
       return;
     }
 
     const likelihoodValues =
       assessmentQuestions
         .filter(
-          (q) =>
-            q.dimension ===
+          (question) =>
+            question.dimension ===
             "likelihood"
         )
         .map(
-          (q) => answers[q.id]
+          (question) =>
+            answers[
+              question.id
+            ]
         );
 
     const impactValues =
       assessmentQuestions
         .filter(
-          (q) =>
-            q.dimension ===
+          (question) =>
+            question.dimension ===
             "impact"
         )
         .map(
-          (q) => answers[q.id]
+          (question) =>
+            answers[
+              question.id
+            ]
         );
 
     const likelihood =
       likelihoodValues.reduce(
-        (a, b) => a + b,
+        (a, b) =>
+          a + b,
         0
       ) /
       likelihoodValues.length;
 
     const impact =
       impactValues.reduce(
-        (a, b) => a + b,
+        (a, b) =>
+          a + b,
         0
       ) /
       impactValues.length;
 
-    const score = Math.round(
-      likelihood * impact
-    );
+    const score =
+      Math.round(
+        likelihood *
+          impact
+      );
 
-    const frameworkNames = [
-      "Govern",
-      "Map",
-      "Measure",
-      "Manage",
-    ] as const;
+    const frameworkNames =
+      [
+        "Govern",
+        "Map",
+        "Measure",
+        "Manage",
+      ] as const;
 
     const framework =
       frameworkNames.reduce(
@@ -3999,23 +5469,32 @@ function RiskAssessments({
         ) => {
           const questions =
             assessmentQuestions.filter(
-              (q) =>
-                q.framework ===
+              (question) =>
+                question.framework ===
                 frameworkName
             );
 
           const average =
             questions.reduce(
-              (sum, q) =>
+              (
+                sum,
+                question
+              ) =>
                 sum +
-                answers[q.id],
+                answers[
+                  question.id
+                ],
               0
-            ) / questions.length;
+            ) /
+            questions.length;
 
-          output[frameworkName] =
+          output[
+            frameworkName
+          ] =
             Math.round(
               100 -
-                ((average - 1) /
+                ((average -
+                  1) /
                   4) *
                   75
             );
@@ -4037,19 +5516,32 @@ function RiskAssessments({
           selectedSystem.id,
         systemName:
           selectedSystem.name,
-        date: new Date().toLocaleDateString(),
-        likelihood: Number(
-          likelihood.toFixed(1)
-        ),
-        impact: Number(
-          impact.toFixed(1)
-        ),
+        date:
+          new Date().toLocaleDateString(),
+        likelihood:
+          Number(
+            likelihood.toFixed(
+              1
+            )
+          ),
+        impact:
+          Number(
+            impact.toFixed(
+              1
+            )
+          ),
         score,
-        risk: getRiskLevel(score),
+        risk:
+          getRiskLevel(
+            score
+          ),
         framework,
       };
 
-    setResult(newResult);
+    setResult(
+      newResult
+    );
+
     onAssessmentComplete(
       newResult
     );
@@ -4070,8 +5562,8 @@ function RiskAssessments({
           <p>
             Evaluate business impact,
             cybersecurity, governance,
-            third-party dependency and model
-            reliability.
+            third-party dependency and
+            model reliability.
           </p>
         </div>
 
@@ -4105,7 +5597,9 @@ function RiskAssessments({
               </h3>
 
               <select
-                value={selectedSystemId}
+                value={
+                  selectedSystemId
+                }
                 onChange={(e) => {
                   setSelectedSystemId(
                     Number(
@@ -4113,16 +5607,25 @@ function RiskAssessments({
                     )
                   );
 
-                  setAnswers({});
+                  setAnswers(
+                    {}
+                  );
                 }}
               >
                 {systems.map(
                   (system) => (
                     <option
-                      key={system.id}
-                      value={system.id}
+                      key={
+                        system.id
+                      }
+                      value={
+                        system.id
+                      }
                     >
-                      {system.name} ·{" "}
+                      {
+                        system.name
+                      }{" "}
+                      ·{" "}
                       {
                         system.department
                       }
@@ -4145,7 +5648,10 @@ function RiskAssessments({
                     }
                   >
                     <div className="question-number">
-                      {index + 1}
+                      {
+                        index +
+                        1
+                      }
                     </div>
 
                     <div className="question-content">
@@ -4172,10 +5678,10 @@ function RiskAssessments({
                       </div>
 
                       <div className="risk-scale">
-                        {[
-                          1, 2, 3, 4, 5,
-                        ].map(
-                          (scoreValue) => (
+                        {[1, 2, 3, 4, 5].map(
+                          (
+                            scoreValue
+                          ) => (
                             <button
                               type="button"
                               key={
@@ -4218,8 +5724,7 @@ function RiskAssessments({
 
             <div className="assessment-submit">
               <span>
-                Complete all questions to
-                generate risk.
+                Complete all questions to generate risk.
               </span>
 
               <button
@@ -4265,15 +5770,23 @@ function RiskAssessments({
         </section>
       ) : (
         <AssessmentResultView
-          result={result}
+          result={
+            result
+          }
           onNewAssessment={() => {
-            setResult(null);
-            setAnswers({});
+            setResult(
+              null
+            );
+
+            setAnswers(
+              {}
+            );
           }}
         />
       )}
 
-      {assessments.length > 0 && (
+      {assessments.length >
+        0 && (
         <section className="assessment-history-panel">
           <div className="panel-heading">
             <div>
@@ -4288,7 +5801,9 @@ function RiskAssessments({
           </div>
 
           {assessments.map(
-            (assessment) => (
+            (
+              assessment
+            ) => (
               <div
                 className="assessment-history-row"
                 key={
@@ -4302,7 +5817,9 @@ function RiskAssessments({
                 </strong>
 
                 <span>
-                  {assessment.date}
+                  {
+                    assessment.date
+                  }
                 </span>
 
                 <span>
@@ -4313,17 +5830,25 @@ function RiskAssessments({
                 </span>
 
                 <span>
-                  {assessment.impact}/5
+                  {
+                    assessment.impact
+                  }
+                  /5
                 </span>
 
                 <span>
-                  {assessment.score}/25
+                  {
+                    assessment.score
+                  }
+                  /25
                 </span>
 
                 <span
                   className={`risk-pill ${assessment.risk.toLowerCase()}`}
                 >
-                  {assessment.risk}
+                  {
+                    assessment.risk
+                  }
                 </span>
               </div>
             )
@@ -4348,8 +5873,13 @@ function MethodLevel({
       />
 
       <div>
-        <strong>{risk}</strong>
-        <small>{score}</small>
+        <strong>
+          {risk}
+        </strong>
+
+        <small>
+          {score}
+        </small>
       </div>
     </div>
   );
@@ -4371,13 +5901,17 @@ function AssessmentResultView({
           </span>
 
           <h2>
-            {result.systemName}
+            {
+              result.systemName
+            }
           </h2>
         </div>
 
         <button
           className="primary-small"
-          onClick={onNewAssessment}
+          onClick={
+            onNewAssessment
+          }
         >
           + New assessment
         </button>
@@ -4390,10 +5924,14 @@ function AssessmentResultView({
           </span>
 
           <strong>
-            {result.score}
+            {
+              result.score
+            }
           </strong>
 
-          <small>/25</small>
+          <small>
+            /25
+          </small>
 
           <div
             className={`result-risk-label ${result.risk.toLowerCase()}`}
@@ -4404,18 +5942,28 @@ function AssessmentResultView({
 
         <div className="result-metrics">
           <div>
-            <span>Likelihood</span>
+            <span>
+              Likelihood
+            </span>
 
             <strong>
-              {result.likelihood}/5
+              {
+                result.likelihood
+              }
+              /5
             </strong>
           </div>
 
           <div>
-            <span>Impact</span>
+            <span>
+              Impact
+            </span>
 
             <strong>
-              {result.impact}/5
+              {
+                result.impact
+              }
+              /5
             </strong>
           </div>
         </div>
@@ -4424,38 +5972,52 @@ function AssessmentResultView({
   );
 }
 
-/* ---------------- INVENTORY ---------------- */
+/* =========================================================
+   INVENTORY
+========================================================= */
 
 function AIInventory({
   systems,
 }: {
   systems: AISystem[];
 }) {
-  const [search, setSearch] =
+  const [
+    search,
+    setSearch,
+  ] =
     useState("");
 
-  const [riskFilter, setRiskFilter] =
+  const [
+    riskFilter,
+    setRiskFilter,
+  ] =
     useState("All");
 
-  const filtered = systems.filter(
-    (system) => {
-      const q = search.toLowerCase();
+  const filtered =
+    systems.filter(
+      (system) => {
+        const q =
+          search.toLowerCase();
 
-      return (
-        (system.name
-          .toLowerCase()
-          .includes(q) ||
-          system.department
+        return (
+          (system.name
             .toLowerCase()
             .includes(q) ||
-          system.vendor
-            .toLowerCase()
-            .includes(q)) &&
-        (riskFilter === "All" ||
-          system.risk === riskFilter)
-      );
-    }
-  );
+            system.department
+              .toLowerCase()
+              .includes(q) ||
+            system.vendor
+              .toLowerCase()
+              .includes(
+                q
+              )) &&
+          (riskFilter ===
+            "All" ||
+            system.risk ===
+              riskFilter)
+        );
+      }
+    );
 
   return (
     <>
@@ -4473,7 +6035,8 @@ function AIInventory({
           value={String(
             systems.filter(
               (system) =>
-                system.risk === "High" ||
+                system.risk ===
+                  "High" ||
                 system.risk ===
                   "Critical"
             ).length
@@ -4524,7 +6087,9 @@ function AIInventory({
 
           <div className="inventory-filters">
             <input
-              value={search}
+              value={
+                search
+              }
               onChange={(e) =>
                 setSearch(
                   e.target.value
@@ -4534,7 +6099,9 @@ function AIInventory({
             />
 
             <select
-              value={riskFilter}
+              value={
+                riskFilter
+              }
               onChange={(e) =>
                 setRiskFilter(
                   e.target.value
@@ -4571,7 +6138,9 @@ function AIInventory({
                   }
                 >
                   <strong>
-                    {system.name}
+                    {
+                      system.name
+                    }
                   </strong>
 
                   <span>
@@ -4581,11 +6150,15 @@ function AIInventory({
                   </span>
 
                   <span>
-                    {system.vendor}
+                    {
+                      system.vendor
+                    }
                   </span>
 
                   <span>
-                    {system.owner}
+                    {
+                      system.owner
+                    }
                   </span>
 
                   <span className="data-pill">
@@ -4597,11 +6170,15 @@ function AIInventory({
                   <span
                     className={`risk-pill ${system.risk.toLowerCase()}`}
                   >
-                    {system.risk}
+                    {
+                      system.risk
+                    }
                   </span>
 
                   <span>
-                    {system.status}
+                    {
+                      system.status
+                    }
                   </span>
                 </div>
               )
@@ -4622,29 +6199,45 @@ function AddSystemModal({
     system: AISystem
   ) => void;
 }) {
-  const [name, setName] =
+  const [
+    name,
+    setName,
+  ] =
     useState("");
 
   const [
     department,
     setDepartment,
-  ] = useState("");
-
-  const [owner, setOwner] =
+  ] =
     useState("");
 
-  const [vendor, setVendor] =
+  const [
+    owner,
+    setOwner,
+  ] =
+    useState("");
+
+  const [
+    vendor,
+    setVendor,
+  ] =
     useState("");
 
   const [
     dataSensitivity,
     setDataSensitivity,
-  ] = useState("Internal");
+  ] =
+    useState(
+      "Internal"
+    );
 
   const [
     criticality,
     setCriticality,
-  ] = useState("Medium");
+  ] =
+    useState(
+      "Medium"
+    );
 
   return (
     <div className="modal-backdrop">
@@ -4658,8 +6251,9 @@ function AddSystemModal({
             !department ||
             !owner ||
             !vendor
-          )
+          ) {
             return;
+          }
 
           onAdd({
             id: Date.now(),
@@ -4670,7 +6264,8 @@ function AddSystemModal({
             dataSensitivity,
             criticality,
             risk: "Medium",
-            status: "Assessment due",
+            status:
+              "Assessment due",
           });
 
           onClose();
@@ -4683,7 +6278,9 @@ function AddSystemModal({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             ×
           </button>
@@ -4694,7 +6291,9 @@ function AddSystemModal({
             AI system name
 
             <input
-              value={name}
+              value={
+                name
+              }
               onChange={(e) =>
                 setName(
                   e.target.value
@@ -4707,7 +6306,9 @@ function AddSystemModal({
             Department
 
             <input
-              value={department}
+              value={
+                department
+              }
               onChange={(e) =>
                 setDepartment(
                   e.target.value
@@ -4720,7 +6321,9 @@ function AddSystemModal({
             Owner
 
             <input
-              value={owner}
+              value={
+                owner
+              }
               onChange={(e) =>
                 setOwner(
                   e.target.value
@@ -4733,7 +6336,9 @@ function AddSystemModal({
             Vendor
 
             <input
-              value={vendor}
+              value={
+                vendor
+              }
               onChange={(e) =>
                 setVendor(
                   e.target.value
@@ -4766,7 +6371,9 @@ function AddSystemModal({
             Criticality
 
             <select
-              value={criticality}
+              value={
+                criticality
+              }
               onChange={(e) =>
                 setCriticality(
                   e.target.value
@@ -4784,7 +6391,9 @@ function AddSystemModal({
           <button
             type="button"
             className="secondary-button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
           >
             Cancel
           </button>
@@ -4801,7 +6410,9 @@ function AddSystemModal({
   );
 }
 
-/* ---------------- SHARED ---------------- */
+/* =========================================================
+   SHARED
+========================================================= */
 
 function Metric({
   label,
@@ -4816,7 +6427,9 @@ function Metric({
 }) {
   return (
     <div className="metric-card">
-      <span>{label}</span>
+      <span>
+        {label}
+      </span>
 
       <strong
         className={
@@ -4828,7 +6441,9 @@ function Metric({
         {value}
       </strong>
 
-      <small>{detail}</small>
+      <small>
+        {detail}
+      </small>
     </div>
   );
 }
@@ -4844,7 +6459,9 @@ function RiskBar({
 }) {
   return (
     <div className="risk-bar-row">
-      <span>{label}</span>
+      <span>
+        {label}
+      </span>
 
       <div className="bar-track">
         <div
@@ -4855,7 +6472,9 @@ function RiskBar({
         />
       </div>
 
-      <strong>{value}</strong>
+      <strong>
+        {value}
+      </strong>
     </div>
   );
 }
@@ -4873,8 +6492,13 @@ function RiskRow({
 }) {
   return (
     <div className="table-row">
-      <strong>{name}</strong>
-      <span>{dept}</span>
+      <strong>
+        {name}
+      </strong>
+
+      <span>
+        {dept}
+      </span>
 
       <span
         className={`risk-pill ${risk.toLowerCase()}`}
@@ -4882,7 +6506,9 @@ function RiskRow({
         {risk}
       </span>
 
-      <span>{owner}</span>
+      <span>
+        {owner}
+      </span>
     </div>
   );
 }

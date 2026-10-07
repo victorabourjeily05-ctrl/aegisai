@@ -24,6 +24,17 @@ type ControlEffectiveness =
   | "Not tested"
   | "Ineffective";
 
+type VendorStatus =
+  | "Approved"
+  | "Conditional"
+  | "Review required"
+  | "Blocked";
+
+type DueDiligenceStatus =
+  | "Complete"
+  | "Partial"
+  | "Not started";
+
 type AISystem = {
   id: number;
   name: string;
@@ -82,6 +93,23 @@ type ControlRecord = {
   linkedRiskIds: string[];
   evidence: string;
   reviewDate: string;
+};
+
+type VendorRecord = {
+  id: string;
+  name: string;
+  service: string;
+  owner: string;
+  status: VendorStatus;
+  dueDiligence: DueDiligenceStatus;
+  dataProcessing: string;
+  securityRisk: number;
+  privacyRisk: number;
+  resilienceRisk: number;
+  complianceRisk: number;
+  dependencyRisk: number;
+  evidence: string;
+  nextReview: string;
 };
 
 type Question = {
@@ -310,10 +338,11 @@ const initialControls: ControlRecord[] = [
     framework: "Measure",
     category: "Model Risk",
     owner: "Model Assurance",
-    status: "Planned",
-    effectiveness: "Not tested",
+    status: "Implemented",
+    effectiveness: "Effective",
     linkedRiskIds: ["RISK-001", "RISK-003"],
-    evidence: "Not uploaded",
+    evidence:
+      "Model bias and accuracy test report v1.0 reviewed and approved.",
     reviewDate: "2026-11-15",
   },
   {
@@ -357,6 +386,77 @@ const initialControls: ControlRecord[] = [
     linkedRiskIds: ["RISK-002", "RISK-003"],
     evidence: "Retention standard and user guidance published.",
     reviewDate: "2026-12-20",
+  },
+];
+
+const initialVendors: VendorRecord[] = [
+  {
+    id: "VND-001",
+    name: "OpenAI",
+    service: "Generative AI / LLM services",
+    owner: "Technology Procurement",
+    status: "Conditional",
+    dueDiligence: "Partial",
+    dataProcessing: "Confidential business and customer data",
+    securityRisk: 3,
+    privacyRisk: 4,
+    resilienceRisk: 3,
+    complianceRisk: 3,
+    dependencyRisk: 4,
+    evidence:
+      "Security documentation reviewed; data retention clarification pending.",
+    nextReview: "2026-11-20",
+  },
+  {
+    id: "VND-002",
+    name: "Microsoft",
+    service: "Enterprise Copilot services",
+    owner: "IT Procurement",
+    status: "Approved",
+    dueDiligence: "Complete",
+    dataProcessing: "Confidential financial information",
+    securityRisk: 2,
+    privacyRisk: 2,
+    resilienceRisk: 2,
+    complianceRisk: 2,
+    dependencyRisk: 2,
+    evidence:
+      "Enterprise security, privacy and contractual review completed.",
+    nextReview: "2027-03-15",
+  },
+  {
+    id: "VND-003",
+    name: "Anthropic",
+    service: "Generative AI / LLM services",
+    owner: "Legal Technology",
+    status: "Conditional",
+    dueDiligence: "Partial",
+    dataProcessing: "Confidential legal information",
+    securityRisk: 3,
+    privacyRisk: 3,
+    resilienceRisk: 3,
+    complianceRisk: 3,
+    dependencyRisk: 3,
+    evidence:
+      "Initial vendor review completed; contractual controls under review.",
+    nextReview: "2026-12-05",
+  },
+  {
+    id: "VND-004",
+    name: "HireSense AI",
+    service: "AI recruitment screening",
+    owner: "HR Procurement",
+    status: "Review required",
+    dueDiligence: "Partial",
+    dataProcessing: "Restricted candidate and employment data",
+    securityRisk: 4,
+    privacyRisk: 4,
+    resilienceRisk: 3,
+    complianceRisk: 4,
+    dependencyRisk: 4,
+    evidence:
+      "Bias testing and regulatory evidence incomplete.",
+    nextReview: "2026-10-31",
   },
 ];
 
@@ -434,6 +534,23 @@ function getRiskLevel(score: number): RiskLevel {
   return "Low";
 }
 
+function getVendorRiskScore(vendor: VendorRecord) {
+  return (
+    vendor.securityRisk +
+    vendor.privacyRisk +
+    vendor.resilienceRisk +
+    vendor.complianceRisk +
+    vendor.dependencyRisk
+  );
+}
+
+function getVendorRiskLevel(score: number): RiskLevel {
+  if (score >= 20) return "Critical";
+  if (score >= 14) return "High";
+  if (score >= 9) return "Medium";
+  return "Low";
+}
+
 function getRiskCategory(result: AssessmentResult) {
   const entries = Object.entries(result.framework) as [
     keyof AssessmentResult["framework"],
@@ -502,6 +619,9 @@ function App() {
   const [controls, setControls] =
     useState<ControlRecord[]>(initialControls);
 
+  const [vendors, setVendors] =
+    useState<VendorRecord[]>(initialVendors);
+
   const [showAddSystem, setShowAddSystem] =
     useState(false);
 
@@ -510,7 +630,6 @@ function App() {
       <div className="login-page">
         <div className="login-brand">
           <div className="brand-mark">A</div>
-
           <div>
             <h1>AegisAI</h1>
             <p>Enterprise AI Risk & Governance</p>
@@ -525,10 +644,7 @@ function App() {
           </div>
 
           <label>Work email</label>
-          <input
-            type="email"
-            placeholder="victor@novabridge.com"
-          />
+          <input type="email" placeholder="victor@novabridge.com" />
 
           <label>Password</label>
           <input type="password" placeholder="••••••••••" />
@@ -624,10 +740,7 @@ function App() {
             ? {
                 ...risk,
                 category: getRiskCategory(result),
-                statement: createRiskStatement(
-                  system,
-                  result
-                ),
+                statement: createRiskStatement(system, result),
                 likelihood: result.likelihood,
                 impact: result.impact,
                 score: result.score,
@@ -652,10 +765,7 @@ function App() {
           systemId: system.id,
           systemName: system.name,
           category: getRiskCategory(result),
-          statement: createRiskStatement(
-            system,
-            result
-          ),
+          statement: createRiskStatement(system, result),
           owner: system.owner,
           likelihood: result.likelihood,
           impact: result.impact,
@@ -676,7 +786,6 @@ function App() {
       <aside className="sidebar">
         <div className="sidebar-brand">
           <div className="brand-mark small">A</div>
-
           <div>
             <strong>AegisAI</strong>
             <span>Governance Platform</span>
@@ -713,7 +822,6 @@ function App() {
 
           <button className="profile">
             <div className="avatar">VA</div>
-
             <div>
               <strong>Victor Abou Rjeily</strong>
               <span>Risk Analyst</span>
@@ -772,6 +880,10 @@ function App() {
             ) : activePage === "Controls" ? (
               <button className="secondary-button">
                 Export control matrix
+              </button>
+            ) : activePage === "Vendors" ? (
+              <button className="secondary-button">
+                Export vendor assessments
               </button>
             ) : (
               <>
@@ -832,7 +944,6 @@ function App() {
                     <span className="panel-label">
                       ENTERPRISE EXPOSURE
                     </span>
-
                     <h2>AI Risk Overview</h2>
                   </div>
 
@@ -849,29 +960,10 @@ function App() {
                   </div>
 
                   <div className="risk-bars">
-                    <RiskBar
-                      label="Critical"
-                      value={2}
-                      width={18}
-                    />
-
-                    <RiskBar
-                      label="High"
-                      value={5}
-                      width={42}
-                    />
-
-                    <RiskBar
-                      label="Medium"
-                      value={9}
-                      width={68}
-                    />
-
-                    <RiskBar
-                      label="Low"
-                      value={8}
-                      width={58}
-                    />
+                    <RiskBar label="Critical" value={2} width={18} />
+                    <RiskBar label="High" value={5} width={42} />
+                    <RiskBar label="Medium" value={9} width={68} />
+                    <RiskBar label="Low" value={8} width={58} />
                   </div>
                 </div>
               </div>
@@ -880,17 +972,71 @@ function App() {
                 <div className="panel-heading">
                   <div>
                     <span className="panel-label">
-                      FRAMEWORK
+                      THIRD-PARTY RISK
                     </span>
-
-                    <h2>NIST AI RMF</h2>
+                    <h2>External AI Vendors</h2>
                   </div>
                 </div>
 
-                <FrameworkRow label="Govern" score={88} />
-                <FrameworkRow label="Map" score={73} />
-                <FrameworkRow label="Measure" score={61} />
-                <FrameworkRow label="Manage" score={77} />
+                <div className="remediation-number">
+                  {vendors.length}
+                </div>
+
+                <p className="muted">
+                  Third-party AI providers assessed
+                </p>
+
+                <div className="action-stats">
+                  <div>
+                    <strong>
+                      {
+                        vendors.filter(
+                          (vendor) =>
+                            getVendorRiskLevel(
+                              getVendorRiskScore(vendor)
+                            ) === "High" ||
+                            getVendorRiskLevel(
+                              getVendorRiskScore(vendor)
+                            ) === "Critical"
+                        ).length
+                      }
+                    </strong>
+                    <span>High risk</span>
+                  </div>
+
+                  <div>
+                    <strong>
+                      {
+                        vendors.filter(
+                          (vendor) =>
+                            vendor.dueDiligence === "Complete"
+                        ).length
+                      }
+                    </strong>
+                    <span>Complete DD</span>
+                  </div>
+
+                  <div>
+                    <strong>
+                      {
+                        vendors.filter(
+                          (vendor) =>
+                            vendor.status === "Approved"
+                        ).length
+                      }
+                    </strong>
+                    <span>Approved</span>
+                  </div>
+                </div>
+
+                <button
+                  className="secondary-full"
+                  onClick={() =>
+                    setActivePage("Vendors")
+                  }
+                >
+                  Open vendor risk
+                </button>
               </div>
             </section>
 
@@ -967,8 +1113,7 @@ function App() {
                       {
                         controls.filter(
                           (control) =>
-                            control.status ===
-                            "Implemented"
+                            control.status === "Implemented"
                         ).length
                       }
                     </strong>
@@ -980,8 +1125,7 @@ function App() {
                       {
                         controls.filter(
                           (control) =>
-                            control.effectiveness ===
-                            "Effective"
+                            control.effectiveness === "Effective"
                         ).length
                       }
                     </strong>
@@ -993,8 +1137,7 @@ function App() {
                       {
                         controls.filter(
                           (control) =>
-                            control.evidence ===
-                            "Not uploaded"
+                            control.evidence === "Not uploaded"
                         ).length
                       }
                     </strong>
@@ -1050,6 +1193,20 @@ function App() {
               )
             }
           />
+        ) : activePage === "Vendors" ? (
+          <VendorsModule
+            vendors={vendors}
+            systems={systems}
+            onUpdateVendor={(updated) =>
+              setVendors((current) =>
+                current.map((vendor) =>
+                  vendor.id === updated.id
+                    ? updated
+                    : vendor
+                )
+              )
+            }
+          />
         ) : (
           <section className="placeholder-page">
             <span className="eyebrow">
@@ -1077,6 +1234,654 @@ function App() {
           }
         />
       )}
+    </div>
+  );
+}
+
+function VendorsModule({
+  vendors,
+  systems,
+  onUpdateVendor,
+}: {
+  vendors: VendorRecord[];
+  systems: AISystem[];
+  onUpdateVendor: (
+    vendor: VendorRecord
+  ) => void;
+}) {
+  const [search, setSearch] =
+    useState("");
+
+  const [riskFilter, setRiskFilter] =
+    useState("All");
+
+  const [statusFilter, setStatusFilter] =
+    useState("All");
+
+  const [selectedVendor, setSelectedVendor] =
+    useState<VendorRecord | null>(null);
+
+  const filtered = vendors.filter(
+    (vendor) => {
+      const score =
+        getVendorRiskScore(vendor);
+
+      const risk =
+        getVendorRiskLevel(score);
+
+      const searchText =
+        search.toLowerCase();
+
+      const matchesSearch =
+        vendor.id
+          .toLowerCase()
+          .includes(searchText) ||
+        vendor.name
+          .toLowerCase()
+          .includes(searchText) ||
+        vendor.service
+          .toLowerCase()
+          .includes(searchText) ||
+        vendor.owner
+          .toLowerCase()
+          .includes(searchText);
+
+      const matchesRisk =
+        riskFilter === "All" ||
+        risk === riskFilter;
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        vendor.status === statusFilter;
+
+      return (
+        matchesSearch &&
+        matchesRisk &&
+        matchesStatus
+      );
+    }
+  );
+
+  const highRisk = vendors.filter(
+    (vendor) => {
+      const risk = getVendorRiskLevel(
+        getVendorRiskScore(vendor)
+      );
+
+      return (
+        risk === "High" ||
+        risk === "Critical"
+      );
+    }
+  ).length;
+
+  const completeDD = vendors.filter(
+    (vendor) =>
+      vendor.dueDiligence === "Complete"
+  ).length;
+
+  const approvalIssues = vendors.filter(
+    (vendor) =>
+      vendor.status === "Conditional" ||
+      vendor.status === "Review required" ||
+      vendor.status === "Blocked"
+  ).length;
+
+  return (
+    <>
+      <section className="vendor-summary">
+        <Metric
+          label="External AI Vendors"
+          value={String(vendors.length)}
+          detail="Third-party providers"
+        />
+
+        <Metric
+          label="High / Critical Risk"
+          value={String(highRisk)}
+          detail="Priority vendor exposure"
+          alert
+        />
+
+        <Metric
+          label="Due Diligence Complete"
+          value={String(completeDD)}
+          detail="Vendor reviews completed"
+        />
+
+        <Metric
+          label="Approval Issues"
+          value={String(approvalIssues)}
+          detail="Conditional or review required"
+          alert={approvalIssues > 0}
+        />
+      </section>
+
+      <section className="vendors-panel">
+        <div className="vendors-toolbar">
+          <div>
+            <span className="panel-label">
+              THIRD-PARTY AI RISK
+            </span>
+
+            <h2>AI Vendor Risk Register</h2>
+
+            <p>
+              Assess external AI providers across
+              security, privacy, resilience, compliance
+              and dependency risk.
+            </p>
+          </div>
+
+          <div className="vendors-filters">
+            <input
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              placeholder="Search vendors..."
+            />
+
+            <select
+              value={riskFilter}
+              onChange={(e) =>
+                setRiskFilter(
+                  e.target.value
+                )
+              }
+            >
+              <option>All</option>
+              <option>Critical</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(
+                  e.target.value
+                )
+              }
+            >
+              <option>All</option>
+              <option>Approved</option>
+              <option>Conditional</option>
+              <option>Review required</option>
+              <option>Blocked</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="vendors-table-wrapper">
+          <div className="vendors-table">
+            <div className="vendors-row vendors-head">
+              <span>ID</span>
+              <span>Vendor</span>
+              <span>Linked systems</span>
+              <span>Data processing</span>
+              <span>Owner</span>
+              <span>Due diligence</span>
+              <span>Risk score</span>
+              <span>Status</span>
+              <span>Next review</span>
+              <span />
+            </div>
+
+            {filtered.map((vendor) => {
+              const score =
+                getVendorRiskScore(vendor);
+
+              const risk =
+                getVendorRiskLevel(score);
+
+              const linkedSystems =
+                systems.filter(
+                  (system) =>
+                    system.vendor ===
+                    vendor.name
+                );
+
+              return (
+                <div
+                  className="vendors-row"
+                  key={vendor.id}
+                >
+                  <strong className="vendor-id">
+                    {vendor.id}
+                  </strong>
+
+                  <div className="vendor-name">
+                    <strong>{vendor.name}</strong>
+                    <span>{vendor.service}</span>
+                  </div>
+
+                  <span className="linked-risk-count">
+                    {linkedSystems.length} systems
+                  </span>
+
+                  <span>
+                    {vendor.dataProcessing}
+                  </span>
+
+                  <span>
+                    {vendor.owner}
+                  </span>
+
+                  <span
+                    className={`dd-pill ${slug(
+                      vendor.dueDiligence
+                    )}`}
+                  >
+                    {vendor.dueDiligence}
+                  </span>
+
+                  <div>
+                    <span
+                      className={`risk-pill ${risk.toLowerCase()}`}
+                    >
+                      {risk}
+                    </span>
+
+                    <small className="score-small">
+                      {score}/25
+                    </small>
+                  </div>
+
+                  <span
+                    className={`vendor-status-pill ${slug(
+                      vendor.status
+                    )}`}
+                  >
+                    {vendor.status}
+                  </span>
+
+                  <span>
+                    {vendor.nextReview}
+                  </span>
+
+                  <button
+                    className="manage-risk-button"
+                    onClick={() =>
+                      setSelectedVendor(vendor)
+                    }
+                  >
+                    Assess
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="inventory-footer">
+          Showing {filtered.length} of{" "}
+          {vendors.length} vendors
+        </div>
+      </section>
+
+      {selectedVendor && (
+        <ManageVendorModal
+          vendor={selectedVendor}
+          systems={systems.filter(
+            (system) =>
+              system.vendor ===
+              selectedVendor.name
+          )}
+          onClose={() =>
+            setSelectedVendor(null)
+          }
+          onSave={(updated) => {
+            onUpdateVendor(updated);
+            setSelectedVendor(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function ManageVendorModal({
+  vendor,
+  systems,
+  onClose,
+  onSave,
+}: {
+  vendor: VendorRecord;
+  systems: AISystem[];
+  onClose: () => void;
+  onSave: (
+    vendor: VendorRecord
+  ) => void;
+}) {
+  const [owner, setOwner] =
+    useState(vendor.owner);
+
+  const [status, setStatus] =
+    useState<VendorStatus>(
+      vendor.status
+    );
+
+  const [
+    dueDiligence,
+    setDueDiligence,
+  ] = useState<DueDiligenceStatus>(
+    vendor.dueDiligence
+  );
+
+  const [
+    dataProcessing,
+    setDataProcessing,
+  ] = useState(vendor.dataProcessing);
+
+  const [
+    securityRisk,
+    setSecurityRisk,
+  ] = useState(vendor.securityRisk);
+
+  const [
+    privacyRisk,
+    setPrivacyRisk,
+  ] = useState(vendor.privacyRisk);
+
+  const [
+    resilienceRisk,
+    setResilienceRisk,
+  ] = useState(vendor.resilienceRisk);
+
+  const [
+    complianceRisk,
+    setComplianceRisk,
+  ] = useState(vendor.complianceRisk);
+
+  const [
+    dependencyRisk,
+    setDependencyRisk,
+  ] = useState(vendor.dependencyRisk);
+
+  const [evidence, setEvidence] =
+    useState(vendor.evidence);
+
+  const [nextReview, setNextReview] =
+    useState(vendor.nextReview);
+
+  const preview: VendorRecord = {
+    ...vendor,
+    owner,
+    status,
+    dueDiligence,
+    dataProcessing,
+    securityRisk,
+    privacyRisk,
+    resilienceRisk,
+    complianceRisk,
+    dependencyRisk,
+    evidence,
+    nextReview,
+  };
+
+  const score =
+    getVendorRiskScore(preview);
+
+  const risk =
+    getVendorRiskLevel(score);
+
+  function saveVendor(e: FormEvent) {
+    e.preventDefault();
+    onSave(preview);
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <form
+        className="vendor-modal"
+        onSubmit={saveVendor}
+      >
+        <div className="modal-heading">
+          <div>
+            <span className="panel-label">
+              THIRD-PARTY AI RISK
+            </span>
+
+            <h2>{vendor.name}</h2>
+
+            <p>
+              {vendor.id} · {vendor.service}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="vendor-risk-hero">
+          <div>
+            <span>Vendor risk score</span>
+            <strong>{score}</strong>
+            <small>/25</small>
+          </div>
+
+          <span
+            className={`result-risk-label ${risk.toLowerCase()}`}
+          >
+            {risk} Risk
+          </span>
+        </div>
+
+        <div className="vendor-linked-systems">
+          <span className="panel-label">
+            LINKED AI SYSTEMS
+          </span>
+
+          <div className="vendor-system-chips">
+            {systems.length > 0 ? (
+              systems.map((system) => (
+                <span key={system.id}>
+                  {system.name} · {system.department}
+                </span>
+              ))
+            ) : (
+              <span>No linked systems</span>
+            )}
+          </div>
+        </div>
+
+        <div className="modal-grid">
+          <label>
+            Vendor owner
+
+            <input
+              value={owner}
+              onChange={(e) =>
+                setOwner(e.target.value)
+              }
+            />
+          </label>
+
+          <label>
+            Approval status
+
+            <select
+              value={status}
+              onChange={(e) =>
+                setStatus(
+                  e.target.value as VendorStatus
+                )
+              }
+            >
+              <option>Approved</option>
+              <option>Conditional</option>
+              <option>Review required</option>
+              <option>Blocked</option>
+            </select>
+          </label>
+
+          <label>
+            Due diligence
+
+            <select
+              value={dueDiligence}
+              onChange={(e) =>
+                setDueDiligence(
+                  e.target.value as DueDiligenceStatus
+                )
+              }
+            >
+              <option>Complete</option>
+              <option>Partial</option>
+              <option>Not started</option>
+            </select>
+          </label>
+
+          <label>
+            Next review date
+
+            <input
+              type="date"
+              value={nextReview}
+              onChange={(e) =>
+                setNextReview(
+                  e.target.value
+                )
+              }
+            />
+          </label>
+        </div>
+
+        <label className="evidence-field">
+          Data processed by vendor
+
+          <textarea
+            value={dataProcessing}
+            onChange={(e) =>
+              setDataProcessing(
+                e.target.value
+              )
+            }
+          />
+        </label>
+
+        <div className="vendor-risk-factors">
+          <span className="panel-label">
+            RISK FACTORS
+          </span>
+
+          <h3>
+            Score each area from 1 (low) to 5 (very high)
+          </h3>
+
+          <VendorRiskFactor
+            label="Cybersecurity risk"
+            description="Security architecture, access control, vulnerability and incident exposure."
+            value={securityRisk}
+            onChange={setSecurityRisk}
+          />
+
+          <VendorRiskFactor
+            label="Privacy & data risk"
+            description="Personal, confidential or restricted data processing and retention exposure."
+            value={privacyRisk}
+            onChange={setPrivacyRisk}
+          />
+
+          <VendorRiskFactor
+            label="Operational resilience"
+            description="Availability, recovery, service continuity and outage dependency."
+            value={resilienceRisk}
+            onChange={setResilienceRisk}
+          />
+
+          <VendorRiskFactor
+            label="Compliance risk"
+            description="Contractual, regulatory, legal and governance exposure."
+            value={complianceRisk}
+            onChange={setComplianceRisk}
+          />
+
+          <VendorRiskFactor
+            label="Concentration dependency"
+            description="Business dependency, switching difficulty and vendor lock-in exposure."
+            value={dependencyRisk}
+            onChange={setDependencyRisk}
+          />
+        </div>
+
+        <label className="evidence-field">
+          Due diligence evidence / notes
+
+          <textarea
+            value={evidence}
+            onChange={(e) =>
+              setEvidence(e.target.value)
+            }
+            placeholder="Security reports, contractual reviews, certifications, privacy evidence..."
+          />
+        </label>
+
+        <div className="modal-actions">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="primary-small"
+          >
+            Save vendor assessment
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function VendorRiskFactor({
+  label,
+  description,
+  value,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="vendor-factor">
+      <div>
+        <strong>{label}</strong>
+        <span>{description}</span>
+      </div>
+
+      <div className="vendor-score-options">
+        {[1, 2, 3, 4, 5].map(
+          (score) => (
+            <button
+              type="button"
+              key={score}
+              className={
+                value === score
+                  ? "vendor-score selected"
+                  : "vendor-score"
+              }
+              onClick={() =>
+                onChange(score)
+              }
+            >
+              {score}
+            </button>
+          )
+        )}
+      </div>
     </div>
   );
 }
@@ -1471,17 +2276,14 @@ function ManageControlModal({
               value={status}
               onChange={(e) =>
                 setStatus(
-                  e.target
-                    .value as ControlStatus
+                  e.target.value as ControlStatus
                 )
               }
             >
               <option>Implemented</option>
               <option>Partial</option>
               <option>Planned</option>
-              <option>
-                Not implemented
-              </option>
+              <option>Not implemented</option>
             </select>
           </label>
 
@@ -1492,15 +2294,12 @@ function ManageControlModal({
               value={effectiveness}
               onChange={(e) =>
                 setEffectiveness(
-                  e.target
-                    .value as ControlEffectiveness
+                  e.target.value as ControlEffectiveness
                 )
               }
             >
               <option>Effective</option>
-              <option>
-                Partially effective
-              </option>
+              <option>Partially effective</option>
               <option>Not tested</option>
               <option>Ineffective</option>
             </select>
@@ -1529,7 +2328,6 @@ function ManageControlModal({
             onChange={(e) =>
               setEvidence(e.target.value)
             }
-            placeholder="Describe test evidence, screenshots, policy references or review results..."
           />
         </label>
 
@@ -1560,13 +2358,11 @@ function ManageControlModal({
 
                 <div>
                   <strong>
-                    {risk.id} ·{" "}
-                    {risk.systemName}
+                    {risk.id} · {risk.systemName}
                   </strong>
 
                   <span>
-                    {risk.category} ·{" "}
-                    {risk.risk} risk
+                    {risk.category} · {risk.risk} risk
                   </span>
                 </div>
               </label>
@@ -1666,8 +2462,7 @@ function RiskRegister({
 
   const closed =
     risks.filter(
-      (risk) =>
-        risk.status === "Closed"
+      (risk) => risk.status === "Closed"
     ).length;
 
   return (
@@ -1929,8 +2724,7 @@ function ManageRiskModal({
             <h2>{risk.id}</h2>
 
             <p>
-              {risk.systemName} ·{" "}
-              {risk.category}
+              {risk.systemName} · {risk.category}
             </p>
           </div>
 
@@ -2245,10 +3039,7 @@ function RiskAssessments({
         framework,
       };
 
-    setResult(
-      assessmentResult
-    );
-
+    setResult(assessmentResult);
     onAssessmentComplete(
       assessmentResult
     );
@@ -2317,7 +3108,6 @@ function RiskAssessments({
                       e.target.value
                     )
                   );
-
                   setAnswers({});
                 }}
               >
@@ -2327,8 +3117,7 @@ function RiskAssessments({
                       key={system.id}
                       value={system.id}
                     >
-                      {system.name} ·{" "}
-                      {system.department}
+                      {system.name} · {system.department}
                     </option>
                   )
                 )}
@@ -2338,9 +3127,7 @@ function RiskAssessments({
             {selectedSystem && (
               <div className="selected-system-card">
                 <div className="system-icon large">
-                  {selectedSystem.name.charAt(
-                    0
-                  )}
+                  {selectedSystem.name.charAt(0)}
                 </div>
 
                 <div>
@@ -2358,9 +3145,7 @@ function RiskAssessments({
                   <span>
                     Data:{" "}
                     <strong>
-                      {
-                        selectedSystem.dataSensitivity
-                      }
+                      {selectedSystem.dataSensitivity}
                     </strong>
                   </span>
 
@@ -2396,16 +3181,12 @@ function RiskAssessments({
                           </h3>
 
                           <p>
-                            {
-                              question.description
-                            }
+                            {question.description}
                           </p>
                         </div>
 
                         <span className="framework-badge">
-                          {
-                            question.framework
-                          }
+                          {question.framework}
                         </span>
                       </div>
 
@@ -2495,31 +3276,15 @@ function RiskAssessments({
 
             <div className="formula-card">
               <span>Risk Score</span>
-
               <strong>
                 Likelihood × Impact
               </strong>
             </div>
 
-            <MethodLevel
-              risk="Low"
-              score="1–4"
-            />
-
-            <MethodLevel
-              risk="Medium"
-              score="5–9"
-            />
-
-            <MethodLevel
-              risk="High"
-              score="10–16"
-            />
-
-            <MethodLevel
-              risk="Critical"
-              score="17–25"
-            />
+            <MethodLevel risk="Low" score="1–4" />
+            <MethodLevel risk="Medium" score="5–9" />
+            <MethodLevel risk="High" score="10–16" />
+            <MethodLevel risk="Critical" score="17–25" />
 
             <div className="methodology-note">
               <strong>NIST AI RMF</strong>
@@ -2548,9 +3313,7 @@ function RiskAssessments({
                 ASSESSMENT HISTORY
               </span>
 
-              <h2>
-                Completed Assessments
-              </h2>
+              <h2>Completed Assessments</h2>
             </div>
           </div>
 
@@ -2644,8 +3407,7 @@ function AssessmentResultView({
           <h2>{result.systemName}</h2>
 
           <p>
-            Risk assessment completed on{" "}
-            {result.date}.
+            Risk assessment completed on {result.date}.
           </p>
         </div>
 
@@ -2660,9 +3422,7 @@ function AssessmentResultView({
       <div className="result-grid">
         <div className="result-score-card">
           <span>Overall risk score</span>
-
           <strong>{result.score}</strong>
-
           <small>/ 25</small>
 
           <div
@@ -2675,7 +3435,6 @@ function AssessmentResultView({
         <div className="result-metrics">
           <div>
             <span>Likelihood</span>
-
             <strong>
               {result.likelihood} / 5
             </strong>
@@ -2683,7 +3442,6 @@ function AssessmentResultView({
 
           <div>
             <span>Impact</span>
-
             <strong>
               {result.impact} / 5
             </strong>
@@ -2837,8 +3595,7 @@ function AIInventory({
   const departments =
     new Set(
       systems.map(
-        (system) =>
-          system.department
+        (system) => system.department
       )
     ).size;
 
@@ -2888,9 +3645,8 @@ function AIInventory({
             <h2>Enterprise AI Systems</h2>
 
             <p>
-              Central register of AI systems,
-              business owners, vendors and risk
-              classifications.
+              Central register of AI systems, business owners,
+              vendors and risk classifications.
             </p>
           </div>
 
@@ -2955,17 +3711,9 @@ function AIInventory({
                     </div>
                   </div>
 
-                  <span>
-                    {system.department}
-                  </span>
-
-                  <span>
-                    {system.vendor}
-                  </span>
-
-                  <span>
-                    {system.owner}
-                  </span>
+                  <span>{system.department}</span>
+                  <span>{system.vendor}</span>
+                  <span>{system.owner}</span>
 
                   <span className="data-pill">
                     {system.dataSensitivity}
@@ -3090,7 +3838,6 @@ function AddSystemModal({
               onChange={(e) =>
                 setName(e.target.value)
               }
-              placeholder="e.g. Marketing Copilot"
             />
           </label>
 
@@ -3104,7 +3851,6 @@ function AddSystemModal({
                   e.target.value
                 )
               }
-              placeholder="e.g. Marketing"
             />
           </label>
 
@@ -3116,7 +3862,6 @@ function AddSystemModal({
               onChange={(e) =>
                 setOwner(e.target.value)
               }
-              placeholder="e.g. Rami S."
             />
           </label>
 
@@ -3128,7 +3873,6 @@ function AddSystemModal({
               onChange={(e) =>
                 setVendor(e.target.value)
               }
-              placeholder="e.g. OpenAI"
             />
           </label>
 

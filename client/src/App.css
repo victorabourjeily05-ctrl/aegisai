@@ -4,7 +4,8 @@
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -17,6 +18,8 @@ body {
 button {
   cursor: pointer;
 }
+
+/* LOGIN */
 
 .login-page {
   min-height: 100vh;
@@ -188,6 +191,8 @@ button {
   font-size: 12px;
   margin-top: 24px;
 }
+
+/* SHELL */
 
 .app-shell {
   min-height: 100vh;
@@ -366,6 +371,8 @@ nav {
   margin-top: 3px;
 }
 
+/* MAIN */
+
 .main-content {
   margin-left: 248px;
   width: calc(100% - 248px);
@@ -426,7 +433,8 @@ header h1 {
 
 .summary-grid,
 .inventory-summary,
-.risk-register-summary {
+.risk-register-summary,
+.control-summary {
   display: grid;
   grid-template-columns:
     repeat(4, 1fr);
@@ -503,6 +511,8 @@ header h1 {
   padding: 7px 9px;
   font-size: 10px;
 }
+
+/* DASHBOARD */
 
 .risk-score-area {
   display: grid;
@@ -713,8 +723,11 @@ header h1 {
   font-size: 11px;
 }
 
+/* GENERIC TABLE PANELS */
+
 .inventory-panel,
-.risk-register-panel {
+.risk-register-panel,
+.controls-panel {
   background: white;
   border: 1px solid #e4e8ee;
   border-radius: 12px;
@@ -722,7 +735,8 @@ header h1 {
 }
 
 .inventory-toolbar,
-.risk-register-toolbar {
+.risk-register-toolbar,
+.controls-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -731,20 +745,23 @@ header h1 {
 }
 
 .inventory-toolbar h2,
-.risk-register-toolbar h2 {
+.risk-register-toolbar h2,
+.controls-toolbar h2 {
   margin: 5px 0 4px;
   font-size: 18px;
 }
 
 .inventory-toolbar p,
-.risk-register-toolbar p {
+.risk-register-toolbar p,
+.controls-toolbar p {
   color: #7b8798;
   margin: 0;
   font-size: 11px;
 }
 
 .inventory-filters,
-.risk-register-filters {
+.risk-register-filters,
+.controls-filters {
   display: flex;
   gap: 8px;
 }
@@ -752,7 +769,9 @@ header h1 {
 .inventory-filters input,
 .inventory-filters select,
 .risk-register-filters input,
-.risk-register-filters select {
+.risk-register-filters select,
+.controls-filters input,
+.controls-filters select {
   border: 1px solid #dce2e9;
   background: white;
   border-radius: 8px;
@@ -763,12 +782,14 @@ header h1 {
 }
 
 .inventory-filters input,
-.risk-register-filters input {
+.risk-register-filters input,
+.controls-filters input {
   width: 190px;
 }
 
 .inventory-table-wrapper,
-.risk-register-table-wrapper {
+.risk-register-table-wrapper,
+.controls-table-wrapper {
   overflow-x: auto;
 }
 
@@ -867,6 +888,8 @@ header h1 {
   color: #8792a3;
   font-size: 10px;
 }
+
+/* ASSESSMENT */
 
 .assessment-top-grid {
   display: grid;
@@ -1579,6 +1602,133 @@ header h1 {
   border-color: #aac4f5;
 }
 
+/* CONTROLS */
+
+.controls-table {
+  min-width: 1600px;
+}
+
+.controls-row {
+  display: grid;
+  grid-template-columns:
+    82px
+    2.4fr
+    0.8fr
+    1fr
+    1fr
+    0.8fr
+    1fr
+    1.15fr
+    0.9fr
+    80px;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 22px;
+  border-bottom: 1px solid #edf0f4;
+  color: #687486;
+  font-size: 10px;
+}
+
+.controls-row:hover:not(.controls-head) {
+  background: #fafcff;
+}
+
+.controls-head {
+  background: #fafbfc;
+  color: #8d98a9;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.control-id {
+  color: #336dd6;
+}
+
+.control-name strong,
+.control-name span {
+  display: block;
+}
+
+.control-name strong {
+  color: #223047;
+  font-size: 11px;
+}
+
+.control-name span {
+  color: #8894a4;
+  font-size: 8px;
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+.framework-control-pill {
+  width: max-content;
+  padding: 5px 8px;
+  background: #edf3ff;
+  color: #3568c6;
+  border-radius: 20px;
+  font-weight: 750;
+}
+
+.linked-risk-count {
+  width: max-content;
+  padding: 5px 8px;
+  background: #f2f4f7;
+  border-radius: 20px;
+  color: #566377;
+  font-weight: 700;
+}
+
+.control-status-pill,
+.effectiveness-pill {
+  width: max-content;
+  padding: 5px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.control-status-pill.implemented {
+  background: #e4f6ee;
+  color: #277a5c;
+}
+
+.control-status-pill.partial {
+  background: #fff4db;
+  color: #916c0a;
+}
+
+.control-status-pill.planned {
+  background: #eaf2ff;
+  color: #3568bd;
+}
+
+.control-status-pill.not-implemented {
+  background: #fee8eb;
+  color: #b63545;
+}
+
+.effectiveness-pill.effective {
+  background: #e4f6ee;
+  color: #277a5c;
+}
+
+.effectiveness-pill.partially-effective {
+  background: #fff4db;
+  color: #916c0a;
+}
+
+.effectiveness-pill.not-tested {
+  background: #eef1f5;
+  color: #687589;
+}
+
+.effectiveness-pill.ineffective {
+  background: #fee8eb;
+  color: #b63545;
+}
+
 /* MODALS */
 
 .modal-backdrop {
@@ -1593,8 +1743,11 @@ header h1 {
 }
 
 .system-modal,
-.risk-modal {
+.risk-modal,
+.control-modal {
   width: min(650px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
   background: white;
   border-radius: 16px;
   box-shadow:
@@ -1605,6 +1758,10 @@ header h1 {
 
 .risk-modal {
   width: min(720px, 100%);
+}
+
+.control-modal {
+  width: min(780px, 100%);
 }
 
 .modal-heading {
@@ -1662,7 +1819,8 @@ header h1 {
 }
 
 .modal-grid input:focus,
-.modal-grid select:focus {
+.modal-grid select:focus,
+.evidence-field textarea:focus {
   border-color: #3d7eff;
   box-shadow:
     0 0 0 3px
@@ -1678,27 +1836,31 @@ header h1 {
   border-top: 1px solid #edf0f4;
 }
 
-.risk-modal-statement {
+.risk-modal-statement,
+.control-description-card {
   background: #f7f9fc;
   border-radius: 10px;
   padding: 15px;
   margin-bottom: 18px;
 }
 
-.risk-modal-statement span {
+.risk-modal-statement span,
+.control-description-card span {
   color: #7b8797;
   font-size: 9px;
   font-weight: 700;
 }
 
-.risk-modal-statement p {
+.risk-modal-statement p,
+.control-description-card p {
   margin: 7px 0 0;
   color: #344055;
   font-size: 11px;
   line-height: 1.6;
 }
 
-.risk-current-scores {
+.risk-current-scores,
+.control-context {
   display: grid;
   grid-template-columns:
     repeat(3, 1fr);
@@ -1706,25 +1868,30 @@ header h1 {
   margin-bottom: 20px;
 }
 
-.risk-current-scores div {
+.risk-current-scores div,
+.control-context div {
   background: #f7f9fc;
   border-radius: 9px;
   padding: 13px;
 }
 
 .risk-current-scores span,
-.risk-current-scores strong {
+.risk-current-scores strong,
+.control-context span,
+.control-context strong {
   display: block;
 }
 
-.risk-current-scores span {
+.risk-current-scores span,
+.control-context span {
   color: #8490a1;
   font-size: 9px;
 }
 
-.risk-current-scores strong {
+.risk-current-scores strong,
+.control-context strong {
   margin-top: 5px;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .residual-preview {
@@ -1743,6 +1910,76 @@ header h1 {
   font-weight: 700;
 }
 
+.evidence-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 18px;
+  color: #344055;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.evidence-field textarea {
+  width: 100%;
+  min-height: 95px;
+  resize: vertical;
+  border: 1px solid #dce2e9;
+  border-radius: 8px;
+  padding: 11px 12px;
+  outline: none;
+  color: #344055;
+}
+
+.linked-risks-section {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #edf0f4;
+}
+
+.linked-risks-section h3 {
+  margin: 5px 0 13px;
+  font-size: 15px;
+}
+
+.risk-checkbox-list {
+  display: grid;
+  gap: 8px;
+}
+
+.risk-checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid #e1e6ed;
+  border-radius: 9px;
+  background: #fafbfc;
+  cursor: pointer;
+}
+
+.risk-checkbox-card input {
+  margin-top: 3px;
+}
+
+.risk-checkbox-card strong,
+.risk-checkbox-card span {
+  display: block;
+}
+
+.risk-checkbox-card strong {
+  color: #28364b;
+  font-size: 10px;
+}
+
+.risk-checkbox-card span {
+  color: #7c8797;
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+/* PLACEHOLDER */
+
 .placeholder-page {
   padding: 70px 30px;
   text-align: center;
@@ -1757,6 +1994,8 @@ header h1 {
   color: #7a8495;
 }
 
+/* RESPONSIVE */
+
 @media (max-width: 1100px) {
   .assessment-layout {
     grid-template-columns: 1fr;
@@ -1770,7 +2009,8 @@ header h1 {
 @media (max-width: 1050px) {
   .summary-grid,
   .inventory-summary,
-  .risk-register-summary {
+  .risk-register-summary,
+  .control-summary {
     grid-template-columns:
       repeat(2, 1fr);
   }
@@ -1789,6 +2029,7 @@ header h1 {
 @media (max-width: 900px) {
   .inventory-toolbar,
   .risk-register-toolbar,
+  .controls-toolbar,
   .assessment-system-selector {
     align-items: flex-start;
     flex-direction: column;
@@ -1796,7 +2037,8 @@ header h1 {
   }
 
   .inventory-filters,
-  .risk-register-filters {
+  .risk-register-filters,
+  .controls-filters {
     flex-wrap: wrap;
   }
 
@@ -1826,7 +2068,8 @@ header h1 {
     margin-left: 56px;
   }
 
-  .risk-current-scores {
+  .risk-current-scores,
+  .control-context {
     grid-template-columns: 1fr;
   }
 }

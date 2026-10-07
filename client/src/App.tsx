@@ -12,6 +12,18 @@ type Page =
 
 type RiskLevel = "Low" | "Medium" | "High" | "Critical";
 
+type ControlStatus =
+  | "Implemented"
+  | "Partial"
+  | "Planned"
+  | "Not implemented";
+
+type ControlEffectiveness =
+  | "Effective"
+  | "Partially effective"
+  | "Not tested"
+  | "Ineffective";
+
 type AISystem = {
   id: number;
   name: string;
@@ -56,6 +68,20 @@ type RiskRecord = {
   status: string;
   residualScore: number;
   residualRisk: RiskLevel;
+};
+
+type ControlRecord = {
+  id: string;
+  name: string;
+  description: string;
+  framework: "Govern" | "Map" | "Measure" | "Manage";
+  category: string;
+  owner: string;
+  status: ControlStatus;
+  effectiveness: ControlEffectiveness;
+  linkedRiskIds: string[];
+  evidence: string;
+  reviewDate: string;
 };
 
 type Question = {
@@ -213,9 +239,124 @@ const initialRisks: RiskRecord[] = [
     score: 13,
     risk: "High",
     treatment: "Mitigate",
-    status: "Open",
-    residualScore: 8,
+    status: "In progress",
+    residualScore: 7,
     residualRisk: "Medium",
+  },
+];
+
+const initialControls: ControlRecord[] = [
+  {
+    id: "CTRL-001",
+    name: "Human Review of High-Risk AI Decisions",
+    description:
+      "Require qualified human review before high-impact AI recommendations or decisions are acted upon.",
+    framework: "Govern",
+    category: "Human Oversight",
+    owner: "AI Governance",
+    status: "Partial",
+    effectiveness: "Partially effective",
+    linkedRiskIds: ["RISK-001", "RISK-003"],
+    evidence: "HR AI approval workflow documented.",
+    reviewDate: "2026-12-15",
+  },
+  {
+    id: "CTRL-002",
+    name: "MFA & Privileged Access",
+    description:
+      "Require multi-factor authentication and controlled privileged access for administrative AI platform functions.",
+    framework: "Manage",
+    category: "Access Control",
+    owner: "Information Security",
+    status: "Implemented",
+    effectiveness: "Effective",
+    linkedRiskIds: ["RISK-002", "RISK-003"],
+    evidence: "MFA configuration and access review evidence.",
+    reviewDate: "2027-01-15",
+  },
+  {
+    id: "CTRL-003",
+    name: "Sensitive Data Protection",
+    description:
+      "Apply data classification, least privilege, encryption and approved handling rules to sensitive information used by AI systems.",
+    framework: "Map",
+    category: "Data Protection",
+    owner: "Data Governance",
+    status: "Implemented",
+    effectiveness: "Partially effective",
+    linkedRiskIds: ["RISK-002", "RISK-003"],
+    evidence: "Data classification standard and encryption controls.",
+    reviewDate: "2026-11-30",
+  },
+  {
+    id: "CTRL-004",
+    name: "AI Activity Logging",
+    description:
+      "Record privileged actions, significant AI activity and security events to support monitoring and investigations.",
+    framework: "Measure",
+    category: "Monitoring",
+    owner: "Security Operations",
+    status: "Implemented",
+    effectiveness: "Effective",
+    linkedRiskIds: ["RISK-002"],
+    evidence: "Centralized activity logs retained for review.",
+    reviewDate: "2027-01-10",
+  },
+  {
+    id: "CTRL-005",
+    name: "Model Accuracy & Bias Testing",
+    description:
+      "Test models and AI-enabled workflows for accuracy, bias, harmful outputs and material performance degradation.",
+    framework: "Measure",
+    category: "Model Risk",
+    owner: "Model Assurance",
+    status: "Planned",
+    effectiveness: "Not tested",
+    linkedRiskIds: ["RISK-001", "RISK-003"],
+    evidence: "Not uploaded",
+    reviewDate: "2026-11-15",
+  },
+  {
+    id: "CTRL-006",
+    name: "Third-Party AI Vendor Review",
+    description:
+      "Evaluate security, privacy, resilience, contractual and governance risks before approving external AI vendors.",
+    framework: "Govern",
+    category: "Third-Party Risk",
+    owner: "Vendor Risk",
+    status: "Implemented",
+    effectiveness: "Partially effective",
+    linkedRiskIds: ["RISK-001", "RISK-002", "RISK-003"],
+    evidence: "Vendor due diligence questionnaire completed.",
+    reviewDate: "2027-02-01",
+  },
+  {
+    id: "CTRL-007",
+    name: "AI Incident Response",
+    description:
+      "Define escalation, containment, communication and recovery procedures for AI-related incidents.",
+    framework: "Manage",
+    category: "Incident Response",
+    owner: "Information Security",
+    status: "Implemented",
+    effectiveness: "Effective",
+    linkedRiskIds: ["RISK-001", "RISK-002", "RISK-003"],
+    evidence: "AI incident playbook approved.",
+    reviewDate: "2027-01-31",
+  },
+  {
+    id: "CTRL-008",
+    name: "Prompt & Data Retention Governance",
+    description:
+      "Define approved retention, deletion and usage rules for prompts, outputs and sensitive data submitted to AI services.",
+    framework: "Govern",
+    category: "Data Governance",
+    owner: "Privacy Office",
+    status: "Implemented",
+    effectiveness: "Effective",
+    linkedRiskIds: ["RISK-002", "RISK-003"],
+    evidence: "Retention standard and user guidance published.",
+    reviewDate: "2026-12-20",
   },
 ];
 
@@ -328,6 +469,22 @@ function createRiskStatement(
   return `${system.name} may be exposed to insufficient cybersecurity, monitoring or operational controls, increasing the likelihood of unauthorized access, misuse or service disruption.`;
 }
 
+function calculateControlCoverage(controls: ControlRecord[]) {
+  if (controls.length === 0) return 0;
+
+  const points = controls.reduce((total, control) => {
+    if (control.status === "Implemented") return total + 1;
+    if (control.status === "Partial") return total + 0.5;
+    return total;
+  }, 0);
+
+  return Math.round((points / controls.length) * 100);
+}
+
+function slug(value: string) {
+  return value.toLowerCase().replace(/\s+/g, "-");
+}
+
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [activePage, setActivePage] =
@@ -341,6 +498,9 @@ function App() {
 
   const [riskRecords, setRiskRecords] =
     useState<RiskRecord[]>(initialRisks);
+
+  const [controls, setControls] =
+    useState<ControlRecord[]>(initialControls);
 
   const [showAddSystem, setShowAddSystem] =
     useState(false);
@@ -359,30 +519,19 @@ function App() {
 
         <div className="login-card">
           <div className="login-heading">
-            <span className="eyebrow">
-              NOVABRIDGE GROUP
-            </span>
-
+            <span className="eyebrow">NOVABRIDGE GROUP</span>
             <h2>Welcome back</h2>
-
-            <p>
-              Sign in to access your AI governance workspace.
-            </p>
+            <p>Sign in to access your AI governance workspace.</p>
           </div>
 
           <label>Work email</label>
-
           <input
             type="email"
             placeholder="victor@novabridge.com"
           />
 
           <label>Password</label>
-
-          <input
-            type="password"
-            placeholder="••••••••••"
-          />
+          <input type="password" placeholder="••••••••••" />
 
           <div className="login-options">
             <label className="remember">
@@ -409,8 +558,7 @@ function App() {
         </div>
 
         <p className="login-footer">
-          AegisAI · AI governance designed for responsible
-          innovation
+          AegisAI · AI governance designed for responsible innovation
         </p>
       </div>
     );
@@ -431,6 +579,9 @@ function App() {
       system.risk === "High" ||
       system.risk === "Critical"
   ).length;
+
+  const controlCoverage =
+    calculateControlCoverage(controls);
 
   function handleAssessmentComplete(
     result: AssessmentResult
@@ -472,15 +623,12 @@ function App() {
           risk.systemId === result.systemId
             ? {
                 ...risk,
-                category:
-                  getRiskCategory(result),
-                statement:
-                  createRiskStatement(
-                    system,
-                    result
-                  ),
-                likelihood:
-                  result.likelihood,
+                category: getRiskCategory(result),
+                statement: createRiskStatement(
+                  system,
+                  result
+                ),
+                likelihood: result.likelihood,
                 impact: result.impact,
                 score: result.score,
                 risk: result.risk,
@@ -498,26 +646,28 @@ function App() {
         result.score - 5
       );
 
-      const newRisk: RiskRecord = {
-        id,
-        systemId: system.id,
-        systemName: system.name,
-        category: getRiskCategory(result),
-        statement:
-          createRiskStatement(system, result),
-        owner: system.owner,
-        likelihood: result.likelihood,
-        impact: result.impact,
-        score: result.score,
-        risk: result.risk,
-        treatment: "Mitigate",
-        status: "Open",
-        residualScore,
-        residualRisk:
-          getRiskLevel(residualScore),
-      };
-
-      return [newRisk, ...current];
+      return [
+        {
+          id,
+          systemId: system.id,
+          systemName: system.name,
+          category: getRiskCategory(result),
+          statement: createRiskStatement(
+            system,
+            result
+          ),
+          owner: system.owner,
+          likelihood: result.likelihood,
+          impact: result.impact,
+          score: result.score,
+          risk: result.risk,
+          treatment: "Mitigate",
+          status: "Open",
+          residualScore,
+          residualRisk: getRiskLevel(residualScore),
+        },
+        ...current,
+      ];
     });
   }
 
@@ -525,9 +675,7 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <div className="brand-mark small">
-            A
-          </div>
+          <div className="brand-mark small">A</div>
 
           <div>
             <strong>AegisAI</strong>
@@ -549,9 +697,7 @@ function App() {
                   ? "nav-item active"
                   : "nav-item"
               }
-              onClick={() =>
-                setActivePage(page)
-              }
+              onClick={() => setActivePage(page)}
             >
               <span className="nav-dot" />
               {page}
@@ -562,20 +708,14 @@ function App() {
         <div className="sidebar-bottom">
           <div className="framework-card">
             <span>NIST AI RMF</span>
-
-            <strong>
-              Govern · Map · Measure · Manage
-            </strong>
+            <strong>Govern · Map · Measure · Manage</strong>
           </div>
 
           <button className="profile">
             <div className="avatar">VA</div>
 
             <div>
-              <strong>
-                Victor Abou Rjeily
-              </strong>
-
+              <strong>Victor Abou Rjeily</strong>
               <span>Risk Analyst</span>
             </div>
           </button>
@@ -592,8 +732,7 @@ function App() {
             <h1>{activePage}</h1>
 
             <p className="subtitle">
-              Enterprise view of AI risk,
-              governance and remediation.
+              Enterprise view of AI risk, governance and remediation.
             </p>
           </div>
 
@@ -606,20 +745,16 @@ function App() {
 
                 <button
                   className="primary-small"
-                  onClick={() =>
-                    setShowAddSystem(true)
-                  }
+                  onClick={() => setShowAddSystem(true)}
                 >
                   + Add AI system
                 </button>
               </>
-            ) : activePage ===
-              "Risk Assessments" ? (
+            ) : activePage === "Risk Assessments" ? (
               <button className="secondary-button">
                 Assessment methodology
               </button>
-            ) : activePage ===
-              "Risk Register" ? (
+            ) : activePage === "Risk Register" ? (
               <>
                 <button className="secondary-button">
                   Export risk register
@@ -628,14 +763,16 @@ function App() {
                 <button
                   className="primary-small"
                   onClick={() =>
-                    setActivePage(
-                      "Risk Assessments"
-                    )
+                    setActivePage("Risk Assessments")
                   }
                 >
                   + New assessment
                 </button>
               </>
+            ) : activePage === "Controls" ? (
+              <button className="secondary-button">
+                Export control matrix
+              </button>
             ) : (
               <>
                 <button className="secondary-button">
@@ -645,9 +782,7 @@ function App() {
                 <button
                   className="primary-small"
                   onClick={() =>
-                    setActivePage(
-                      "Risk Assessments"
-                    )
+                    setActivePage("Risk Assessments")
                   }
                 >
                   + New assessment
@@ -668,9 +803,7 @@ function App() {
 
               <Metric
                 label="High-Risk Systems"
-                value={String(
-                  highRiskSystems
-                )}
+                value={String(highRiskSystems)}
                 detail="Requires attention"
                 alert
               />
@@ -679,8 +812,7 @@ function App() {
                 label="Open Risks"
                 value={String(
                   riskRecords.filter(
-                    (risk) =>
-                      risk.status !== "Closed"
+                    (risk) => risk.status !== "Closed"
                   ).length
                 )}
                 detail="Enterprise risk register"
@@ -688,8 +820,8 @@ function App() {
 
               <Metric
                 label="Control Coverage"
-                value="82%"
-                detail="+7% since last review"
+                value={`${controlCoverage}%`}
+                detail="Implementation coverage"
               />
             </section>
 
@@ -701,9 +833,7 @@ function App() {
                       ENTERPRISE EXPOSURE
                     </span>
 
-                    <h2>
-                      AI Risk Overview
-                    </h2>
+                    <h2>AI Risk Overview</h2>
                   </div>
 
                   <button className="mini-button">
@@ -713,10 +843,7 @@ function App() {
 
                 <div className="risk-score-area">
                   <div className="risk-score">
-                    <span>
-                      Overall risk
-                    </span>
-
+                    <span>Overall risk</span>
                     <strong>68</strong>
                     <small>/ 100</small>
                   </div>
@@ -760,25 +887,10 @@ function App() {
                   </div>
                 </div>
 
-                <FrameworkRow
-                  label="Govern"
-                  score={88}
-                />
-
-                <FrameworkRow
-                  label="Map"
-                  score={73}
-                />
-
-                <FrameworkRow
-                  label="Measure"
-                  score={61}
-                />
-
-                <FrameworkRow
-                  label="Manage"
-                  score={77}
-                />
+                <FrameworkRow label="Govern" score={88} />
+                <FrameworkRow label="Map" score={73} />
+                <FrameworkRow label="Measure" score={61} />
+                <FrameworkRow label="Manage" score={77} />
               </div>
             </section>
 
@@ -790,17 +902,13 @@ function App() {
                       PRIORITY SYSTEMS
                     </span>
 
-                    <h2>
-                      Highest-Risk AI Systems
-                    </h2>
+                    <h2>Highest-Risk AI Systems</h2>
                   </div>
 
                   <button
                     className="text-button"
                     onClick={() =>
-                      setActivePage(
-                        "AI Inventory"
-                      )
+                      setActivePage("AI Inventory")
                     }
                   >
                     View all
@@ -818,27 +926,17 @@ function App() {
                   {systems
                     .filter(
                       (system) =>
-                        system.risk ===
-                          "Critical" ||
-                        system.risk ===
-                          "High"
+                        system.risk === "Critical" ||
+                        system.risk === "High"
                     )
                     .slice(0, 4)
                     .map((system) => (
                       <RiskRow
                         key={system.id}
-                        name={
-                          system.name
-                        }
-                        dept={
-                          system.department
-                        }
-                        risk={
-                          system.risk
-                        }
-                        owner={
-                          system.owner
-                        }
+                        name={system.name}
+                        dept={system.department}
+                        risk={system.risk}
+                        owner={system.owner}
                       />
                     ))}
                 </div>
@@ -848,93 +946,76 @@ function App() {
                 <div className="panel-heading">
                   <div>
                     <span className="panel-label">
-                      RISK REGISTER
+                      CONTROL ASSURANCE
                     </span>
 
-                    <h2>
-                      Enterprise Risks
-                    </h2>
+                    <h2>Control Coverage</h2>
                   </div>
                 </div>
 
                 <div className="remediation-number">
-                  {
-                    riskRecords.filter(
-                      (risk) =>
-                        risk.status !==
-                        "Closed"
-                    ).length
-                  }
+                  {controlCoverage}%
                 </div>
 
                 <p className="muted">
-                  Open AI risks
+                  Weighted implementation coverage
                 </p>
 
                 <div className="action-stats">
                   <div>
                     <strong>
                       {
-                        riskRecords.filter(
-                          (risk) =>
-                            risk.risk ===
-                            "Critical"
+                        controls.filter(
+                          (control) =>
+                            control.status ===
+                            "Implemented"
                         ).length
                       }
                     </strong>
-
-                    <span>Critical</span>
+                    <span>Implemented</span>
                   </div>
 
                   <div>
                     <strong>
                       {
-                        riskRecords.filter(
-                          (risk) =>
-                            risk.risk ===
-                            "High"
+                        controls.filter(
+                          (control) =>
+                            control.effectiveness ===
+                            "Effective"
                         ).length
                       }
                     </strong>
-
-                    <span>High</span>
+                    <span>Effective</span>
                   </div>
 
                   <div>
                     <strong>
                       {
-                        riskRecords.filter(
-                          (risk) =>
-                            risk.status ===
-                            "Closed"
+                        controls.filter(
+                          (control) =>
+                            control.evidence ===
+                            "Not uploaded"
                         ).length
                       }
                     </strong>
-
-                    <span>Closed</span>
+                    <span>Evidence gaps</span>
                   </div>
                 </div>
 
                 <button
                   className="secondary-full"
                   onClick={() =>
-                    setActivePage(
-                      "Risk Register"
-                    )
+                    setActivePage("Controls")
                   }
                 >
-                  Open risk register
+                  Open control library
                 </button>
               </div>
             </section>
           </>
-        ) : activePage ===
-          "AI Inventory" ? (
-          <AIInventory
-            systems={systems}
-          />
-        ) : activePage ===
-          "Risk Assessments" ? (
+        ) : activePage === "AI Inventory" ? (
+          <AIInventory systems={systems} />
+        ) : activePage === "Risk Assessments" ? (
           <RiskAssessments
             systems={systems}
             assessments={assessments}
@@ -942,17 +1023,29 @@ function App() {
               handleAssessmentComplete
             }
           />
-        ) : activePage ===
-          "Risk Register" ? (
+        ) : activePage === "Risk Register" ? (
           <RiskRegister
             risks={riskRecords}
             onUpdateRisk={(updated) =>
               setRiskRecords((current) =>
                 current.map((risk) =>
-                  risk.id ===
-                  updated.id
+                  risk.id === updated.id
                     ? updated
                     : risk
+                )
+              )
+            }
+          />
+        ) : activePage === "Controls" ? (
+          <ControlsLibrary
+            controls={controls}
+            risks={riskRecords}
+            onUpdateControl={(updated) =>
+              setControls((current) =>
+                current.map((control) =>
+                  control.id === updated.id
+                    ? updated
+                    : control
                 )
               )
             }
@@ -966,9 +1059,8 @@ function App() {
             <h2>{activePage}</h2>
 
             <p>
-              This module will be built next and
-              connected to the AegisAI risk
-              engine.
+              This module will be built next and connected
+              to the AegisAI risk engine.
             </p>
           </section>
         )}
@@ -976,9 +1068,7 @@ function App() {
 
       {showAddSystem && (
         <AddSystemModal
-          onClose={() =>
-            setShowAddSystem(false)
-          }
+          onClose={() => setShowAddSystem(false)}
           onAdd={(system) =>
             setSystems((current) => [
               ...current,
@@ -987,6 +1077,520 @@ function App() {
           }
         />
       )}
+    </div>
+  );
+}
+
+function ControlsLibrary({
+  controls,
+  risks,
+  onUpdateControl,
+}: {
+  controls: ControlRecord[];
+  risks: RiskRecord[];
+  onUpdateControl: (
+    control: ControlRecord
+  ) => void;
+}) {
+  const [search, setSearch] =
+    useState("");
+
+  const [frameworkFilter, setFrameworkFilter] =
+    useState("All");
+
+  const [statusFilter, setStatusFilter] =
+    useState("All");
+
+  const [selectedControl, setSelectedControl] =
+    useState<ControlRecord | null>(null);
+
+  const filtered = controls.filter(
+    (control) => {
+      const searchText =
+        search.toLowerCase();
+
+      const matchesSearch =
+        control.id
+          .toLowerCase()
+          .includes(searchText) ||
+        control.name
+          .toLowerCase()
+          .includes(searchText) ||
+        control.category
+          .toLowerCase()
+          .includes(searchText) ||
+        control.owner
+          .toLowerCase()
+          .includes(searchText);
+
+      const matchesFramework =
+        frameworkFilter === "All" ||
+        control.framework === frameworkFilter;
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        control.status === statusFilter;
+
+      return (
+        matchesSearch &&
+        matchesFramework &&
+        matchesStatus
+      );
+    }
+  );
+
+  const implemented =
+    controls.filter(
+      (control) =>
+        control.status === "Implemented"
+    ).length;
+
+  const effective =
+    controls.filter(
+      (control) =>
+        control.effectiveness === "Effective"
+    ).length;
+
+  const evidenceGaps =
+    controls.filter(
+      (control) =>
+        control.evidence.trim() === "" ||
+        control.evidence === "Not uploaded"
+    ).length;
+
+  return (
+    <>
+      <section className="control-summary">
+        <Metric
+          label="Control Library"
+          value={String(controls.length)}
+          detail="AI governance controls"
+        />
+
+        <Metric
+          label="Implemented"
+          value={String(implemented)}
+          detail={`${calculateControlCoverage(
+            controls
+          )}% weighted coverage`}
+        />
+
+        <Metric
+          label="Effective"
+          value={String(effective)}
+          detail="Validated controls"
+        />
+
+        <Metric
+          label="Evidence Gaps"
+          value={String(evidenceGaps)}
+          detail="Evidence still required"
+          alert={evidenceGaps > 0}
+        />
+      </section>
+
+      <section className="controls-panel">
+        <div className="controls-toolbar">
+          <div>
+            <span className="panel-label">
+              CONTROL ASSURANCE
+            </span>
+
+            <h2>AI Governance Control Library</h2>
+
+            <p>
+              Map controls to NIST AI RMF, risks,
+              owners, evidence and operating effectiveness.
+            </p>
+          </div>
+
+          <div className="controls-filters">
+            <input
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              placeholder="Search controls..."
+            />
+
+            <select
+              value={frameworkFilter}
+              onChange={(e) =>
+                setFrameworkFilter(
+                  e.target.value
+                )
+              }
+            >
+              <option>All</option>
+              <option>Govern</option>
+              <option>Map</option>
+              <option>Measure</option>
+              <option>Manage</option>
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(
+                  e.target.value
+                )
+              }
+            >
+              <option>All</option>
+              <option>Implemented</option>
+              <option>Partial</option>
+              <option>Planned</option>
+              <option>Not implemented</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="controls-table-wrapper">
+          <div className="controls-table">
+            <div className="controls-row controls-head">
+              <span>ID</span>
+              <span>Control</span>
+              <span>NIST AI RMF</span>
+              <span>Category</span>
+              <span>Owner</span>
+              <span>Linked risks</span>
+              <span>Status</span>
+              <span>Effectiveness</span>
+              <span>Review</span>
+              <span />
+            </div>
+
+            {filtered.map((control) => (
+              <div
+                className="controls-row"
+                key={control.id}
+              >
+                <strong className="control-id">
+                  {control.id}
+                </strong>
+
+                <div className="control-name">
+                  <strong>{control.name}</strong>
+                  <span>{control.description}</span>
+                </div>
+
+                <span className="framework-control-pill">
+                  {control.framework}
+                </span>
+
+                <span>{control.category}</span>
+
+                <span>{control.owner}</span>
+
+                <span className="linked-risk-count">
+                  {control.linkedRiskIds.length} linked
+                </span>
+
+                <span
+                  className={`control-status-pill ${slug(
+                    control.status
+                  )}`}
+                >
+                  {control.status}
+                </span>
+
+                <span
+                  className={`effectiveness-pill ${slug(
+                    control.effectiveness
+                  )}`}
+                >
+                  {control.effectiveness}
+                </span>
+
+                <span>{control.reviewDate}</span>
+
+                <button
+                  className="manage-risk-button"
+                  onClick={() =>
+                    setSelectedControl(control)
+                  }
+                >
+                  Manage
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="inventory-footer">
+          Showing {filtered.length} of{" "}
+          {controls.length} controls
+        </div>
+      </section>
+
+      {selectedControl && (
+        <ManageControlModal
+          control={selectedControl}
+          risks={risks}
+          onClose={() =>
+            setSelectedControl(null)
+          }
+          onSave={(updated) => {
+            onUpdateControl(updated);
+            setSelectedControl(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function ManageControlModal({
+  control,
+  risks,
+  onClose,
+  onSave,
+}: {
+  control: ControlRecord;
+  risks: RiskRecord[];
+  onClose: () => void;
+  onSave: (
+    control: ControlRecord
+  ) => void;
+}) {
+  const [owner, setOwner] =
+    useState(control.owner);
+
+  const [status, setStatus] =
+    useState<ControlStatus>(
+      control.status
+    );
+
+  const [effectiveness, setEffectiveness] =
+    useState<ControlEffectiveness>(
+      control.effectiveness
+    );
+
+  const [evidence, setEvidence] =
+    useState(control.evidence);
+
+  const [reviewDate, setReviewDate] =
+    useState(control.reviewDate);
+
+  const [
+    linkedRiskIds,
+    setLinkedRiskIds,
+  ] = useState<string[]>(
+    control.linkedRiskIds
+  );
+
+  function toggleRisk(riskId: string) {
+    setLinkedRiskIds((current) =>
+      current.includes(riskId)
+        ? current.filter(
+            (id) => id !== riskId
+          )
+        : [...current, riskId]
+    );
+  }
+
+  function saveControl(e: FormEvent) {
+    e.preventDefault();
+
+    onSave({
+      ...control,
+      owner,
+      status,
+      effectiveness,
+      evidence,
+      reviewDate,
+      linkedRiskIds,
+    });
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <form
+        className="control-modal"
+        onSubmit={saveControl}
+      >
+        <div className="modal-heading">
+          <div>
+            <span className="panel-label">
+              CONTROL ASSURANCE
+            </span>
+
+            <h2>{control.id}</h2>
+
+            <p>{control.name}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="control-description-card">
+          <span>Control objective</span>
+          <p>{control.description}</p>
+        </div>
+
+        <div className="control-context">
+          <div>
+            <span>NIST AI RMF</span>
+            <strong>{control.framework}</strong>
+          </div>
+
+          <div>
+            <span>Category</span>
+            <strong>{control.category}</strong>
+          </div>
+
+          <div>
+            <span>Linked risks</span>
+            <strong>
+              {linkedRiskIds.length}
+            </strong>
+          </div>
+        </div>
+
+        <div className="modal-grid">
+          <label>
+            Control owner
+
+            <input
+              value={owner}
+              onChange={(e) =>
+                setOwner(e.target.value)
+              }
+            />
+          </label>
+
+          <label>
+            Implementation status
+
+            <select
+              value={status}
+              onChange={(e) =>
+                setStatus(
+                  e.target
+                    .value as ControlStatus
+                )
+              }
+            >
+              <option>Implemented</option>
+              <option>Partial</option>
+              <option>Planned</option>
+              <option>
+                Not implemented
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Effectiveness
+
+            <select
+              value={effectiveness}
+              onChange={(e) =>
+                setEffectiveness(
+                  e.target
+                    .value as ControlEffectiveness
+                )
+              }
+            >
+              <option>Effective</option>
+              <option>
+                Partially effective
+              </option>
+              <option>Not tested</option>
+              <option>Ineffective</option>
+            </select>
+          </label>
+
+          <label>
+            Next review date
+
+            <input
+              type="date"
+              value={reviewDate}
+              onChange={(e) =>
+                setReviewDate(
+                  e.target.value
+                )
+              }
+            />
+          </label>
+        </div>
+
+        <label className="evidence-field">
+          Evidence / assurance notes
+
+          <textarea
+            value={evidence}
+            onChange={(e) =>
+              setEvidence(e.target.value)
+            }
+            placeholder="Describe test evidence, screenshots, policy references or review results..."
+          />
+        </label>
+
+        <div className="linked-risks-section">
+          <span className="panel-label">
+            LINKED RISKS
+          </span>
+
+          <h3>
+            Risks addressed by this control
+          </h3>
+
+          <div className="risk-checkbox-list">
+            {risks.map((risk) => (
+              <label
+                className="risk-checkbox-card"
+                key={risk.id}
+              >
+                <input
+                  type="checkbox"
+                  checked={linkedRiskIds.includes(
+                    risk.id
+                  )}
+                  onChange={() =>
+                    toggleRisk(risk.id)
+                  }
+                />
+
+                <div>
+                  <strong>
+                    {risk.id} ·{" "}
+                    {risk.systemName}
+                  </strong>
+
+                  <span>
+                    {risk.category} ·{" "}
+                    {risk.risk} risk
+                  </span>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="primary-small"
+          >
+            Save control
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -1062,7 +1666,8 @@ function RiskRegister({
 
   const closed =
     risks.filter(
-      (risk) => risk.status === "Closed"
+      (risk) =>
+        risk.status === "Closed"
     ).length;
 
   return (
@@ -1105,8 +1710,7 @@ function RiskRegister({
 
             <p>
               Track inherent risk, ownership,
-              treatment decisions and residual
-              exposure.
+              treatment decisions and residual exposure.
             </p>
           </div>
 
@@ -1114,9 +1718,7 @@ function RiskRegister({
             <input
               value={search}
               onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
+                setSearch(e.target.value)
               }
               placeholder="Search risks..."
             />
@@ -1190,9 +1792,7 @@ function RiskRegister({
                   {risk.category}
                 </span>
 
-                <span>
-                  {risk.owner}
-                </span>
+                <span>{risk.owner}</span>
 
                 <div>
                   <span
@@ -1211,9 +1811,9 @@ function RiskRegister({
                 </span>
 
                 <span
-                  className={`status-pill ${risk.status
-                    .toLowerCase()
-                    .replace(" ", "-")}`}
+                  className={`status-pill ${slug(
+                    risk.status
+                  )}`}
                 >
                   {risk.status}
                 </span>
@@ -1222,25 +1822,18 @@ function RiskRegister({
                   <span
                     className={`risk-pill ${risk.residualRisk.toLowerCase()}`}
                   >
-                    {
-                      risk.residualRisk
-                    }
+                    {risk.residualRisk}
                   </span>
 
                   <small className="score-small">
-                    {
-                      risk.residualScore
-                    }
-                    /25
+                    {risk.residualScore}/25
                   </small>
                 </div>
 
                 <button
                   className="manage-risk-button"
                   onClick={() =>
-                    setSelectedRisk(
-                      risk
-                    )
+                    setSelectedRisk(risk)
                   }
                 >
                   Manage
@@ -1351,31 +1944,23 @@ function ManageRiskModal({
 
         <div className="risk-modal-statement">
           <span>Risk statement</span>
-
           <p>{risk.statement}</p>
         </div>
 
         <div className="risk-current-scores">
           <div>
             <span>Likelihood</span>
-            <strong>
-              {risk.likelihood}/5
-            </strong>
+            <strong>{risk.likelihood}/5</strong>
           </div>
 
           <div>
             <span>Impact</span>
-            <strong>
-              {risk.impact}/5
-            </strong>
+            <strong>{risk.impact}/5</strong>
           </div>
 
           <div>
             <span>Inherent risk</span>
-
-            <strong>
-              {risk.score}/25
-            </strong>
+            <strong>{risk.score}/25</strong>
           </div>
         </div>
 
@@ -1386,9 +1971,7 @@ function ManageRiskModal({
             <input
               value={owner}
               onChange={(e) =>
-                setOwner(
-                  e.target.value
-                )
+                setOwner(e.target.value)
               }
             />
           </label>
@@ -1424,9 +2007,7 @@ function ManageRiskModal({
               }
             >
               <option>Open</option>
-              <option>
-                In progress
-              </option>
+              <option>In progress</option>
               <option>Accepted</option>
               <option>Closed</option>
             </select>
@@ -1686,27 +2267,19 @@ function RiskAssessments({
             AI RISK ASSESSMENT
           </span>
 
-          <h2>
-            Assess AI System Risk
-          </h2>
+          <h2>Assess AI System Risk</h2>
 
           <p>
-            Evaluate inherent AI risk across
-            business impact, cybersecurity,
-            governance, third-party dependency
+            Evaluate inherent AI risk across business impact,
+            cybersecurity, governance, third-party dependency
             and model reliability.
           </p>
         </div>
 
         <div className="assessment-progress-card">
           <div>
-            <span>
-              Assessment progress
-            </span>
-
-            <strong>
-              {completion}%
-            </strong>
+            <span>Assessment progress</span>
+            <strong>{completion}%</strong>
           </div>
 
           <div className="assessment-progress-track">
@@ -1719,8 +2292,7 @@ function RiskAssessments({
 
           <small>
             {answeredCount} of{" "}
-            {assessmentQuestions.length}{" "}
-            questions completed
+            {assessmentQuestions.length} questions completed
           </small>
         </div>
       </section>
@@ -1734,9 +2306,7 @@ function RiskAssessments({
                   SYSTEM SCOPE
                 </span>
 
-                <h3>
-                  Select AI System
-                </h3>
+                <h3>Select AI System</h3>
               </div>
 
               <select
@@ -1754,17 +2324,11 @@ function RiskAssessments({
                 {systems.map(
                   (system) => (
                     <option
-                      key={
-                        system.id
-                      }
-                      value={
-                        system.id
-                      }
+                      key={system.id}
+                      value={system.id}
                     >
                       {system.name} ·{" "}
-                      {
-                        system.department
-                      }
+                      {system.department}
                     </option>
                   )
                 )}
@@ -1781,19 +2345,12 @@ function RiskAssessments({
 
                 <div>
                   <strong>
-                    {
-                      selectedSystem.name
-                    }
+                    {selectedSystem.name}
                   </strong>
 
                   <span>
-                    {
-                      selectedSystem.department
-                    }{" "}
-                    ·{" "}
-                    {
-                      selectedSystem.vendor
-                    }
+                    {selectedSystem.department} ·{" "}
+                    {selectedSystem.vendor}
                   </span>
                 </div>
 
@@ -1810,9 +2367,7 @@ function RiskAssessments({
                   <span>
                     Criticality:{" "}
                     <strong>
-                      {
-                        selectedSystem.criticality
-                      }
+                      {selectedSystem.criticality}
                     </strong>
                   </span>
                 </div>
@@ -1827,9 +2382,7 @@ function RiskAssessments({
                 ) => (
                   <div
                     className="assessment-question"
-                    key={
-                      question.id
-                    }
+                    key={question.id}
                   >
                     <div className="question-number">
                       {index + 1}
@@ -1839,9 +2392,7 @@ function RiskAssessments({
                       <div className="question-heading">
                         <div>
                           <h3>
-                            {
-                              question.title
-                            }
+                            {question.title}
                           </h3>
 
                           <p>
@@ -1859,22 +2410,15 @@ function RiskAssessments({
                       </div>
 
                       <div className="risk-scale">
-                        {[
-                          1, 2, 3,
-                          4, 5,
-                        ].map(
+                        {[1, 2, 3, 4, 5].map(
                           (score) => (
                             <button
                               type="button"
-                              key={
-                                score
-                              }
+                              key={score}
                               className={
                                 answers[
-                                  question
-                                    .id
-                                ] ===
-                                score
+                                  question.id
+                                ] === score
                                   ? "scale-option selected"
                                   : "scale-option"
                               }
@@ -1891,23 +2435,17 @@ function RiskAssessments({
                               }
                             >
                               <strong>
-                                {
-                                  score
-                                }
+                                {score}
                               </strong>
 
                               <span>
-                                {score ===
-                                1
+                                {score === 1
                                   ? "Very low"
-                                  : score ===
-                                    2
+                                  : score === 2
                                   ? "Low"
-                                  : score ===
-                                    3
+                                  : score === 3
                                   ? "Moderate"
-                                  : score ===
-                                    4
+                                  : score === 4
                                   ? "High"
                                   : "Very high"}
                               </span>
@@ -1928,9 +2466,8 @@ function RiskAssessments({
                 </strong>
 
                 <span>
-                  AegisAI will calculate
-                  likelihood, impact and
-                  overall risk.
+                  AegisAI will calculate likelihood,
+                  impact and overall risk.
                 </span>
               </div>
 
@@ -1953,12 +2490,12 @@ function RiskAssessments({
             <h3>Risk Scoring</h3>
 
             <p>
-              Each question is scored from
-              1 to 5.
+              Each question is scored from 1 to 5.
             </p>
 
             <div className="formula-card">
               <span>Risk Score</span>
+
               <strong>
                 Likelihood × Impact
               </strong>
@@ -1985,14 +2522,11 @@ function RiskAssessments({
             />
 
             <div className="methodology-note">
-              <strong>
-                NIST AI RMF
-              </strong>
+              <strong>NIST AI RMF</strong>
 
               <p>
-                Questions are mapped to
-                Govern, Map, Measure and
-                Manage.
+                Questions are mapped to Govern, Map,
+                Measure and Manage.
               </p>
             </div>
           </aside>
@@ -2034,49 +2568,32 @@ function RiskAssessments({
               (assessment) => (
                 <div
                   className="assessment-history-row"
-                  key={
-                    assessment.id
-                  }
+                  key={assessment.id}
                 >
                   <strong>
-                    {
-                      assessment.systemName
-                    }
+                    {assessment.systemName}
                   </strong>
 
                   <span>
-                    {
-                      assessment.date
-                    }
+                    {assessment.date}
                   </span>
 
                   <span>
-                    {
-                      assessment.likelihood
-                    }{" "}
-                    / 5
+                    {assessment.likelihood} / 5
                   </span>
 
                   <span>
-                    {
-                      assessment.impact
-                    }{" "}
-                    / 5
+                    {assessment.impact} / 5
                   </span>
 
                   <span>
-                    {
-                      assessment.score
-                    }{" "}
-                    / 25
+                    {assessment.score} / 25
                   </span>
 
                   <span
                     className={`risk-pill ${assessment.risk.toLowerCase()}`}
                   >
-                    {
-                      assessment.risk
-                    }
+                    {assessment.risk}
                   </span>
                 </div>
               )
@@ -2124,9 +2641,7 @@ function AssessmentResultView({
             ASSESSMENT COMPLETE
           </span>
 
-          <h2>
-            {result.systemName}
-          </h2>
+          <h2>{result.systemName}</h2>
 
           <p>
             Risk assessment completed on{" "}
@@ -2144,13 +2659,9 @@ function AssessmentResultView({
 
       <div className="result-grid">
         <div className="result-score-card">
-          <span>
-            Overall risk score
-          </span>
+          <span>Overall risk score</span>
 
-          <strong>
-            {result.score}
-          </strong>
+          <strong>{result.score}</strong>
 
           <small>/ 25</small>
 
@@ -2179,19 +2690,14 @@ function AssessmentResultView({
           </div>
 
           <div>
-            <span>
-              Risk treatment
-            </span>
+            <span>Risk treatment</span>
 
             <strong>
-              {result.risk ===
-              "Critical"
+              {result.risk === "Critical"
                 ? "Immediate action"
-                : result.risk ===
-                  "High"
+                : result.risk === "High"
                 ? "Priority remediation"
-                : result.risk ===
-                  "Medium"
+                : result.risk === "Medium"
                 ? "Monitor & improve"
                 : "Accept / monitor"}
             </strong>
@@ -2205,38 +2711,28 @@ function AssessmentResultView({
             NIST AI RMF MAPPING
           </span>
 
-          <h3>
-            Governance Readiness
-          </h3>
+          <h3>Governance Readiness</h3>
         </div>
 
         <div className="result-framework-grid">
           <FrameworkScore
             name="Govern"
-            score={
-              result.framework.Govern
-            }
+            score={result.framework.Govern}
           />
 
           <FrameworkScore
             name="Map"
-            score={
-              result.framework.Map
-            }
+            score={result.framework.Map}
           />
 
           <FrameworkScore
             name="Measure"
-            score={
-              result.framework.Measure
-            }
+            score={result.framework.Measure}
           />
 
           <FrameworkScore
             name="Manage"
-            score={
-              result.framework.Manage
-            }
+            score={result.framework.Manage}
           />
         </div>
       </div>
@@ -2257,10 +2753,9 @@ function AssessmentResultView({
         </h3>
 
         <p>
-          This assessment has also been
-          reflected in the enterprise Risk
-          Register for treatment and
-          ownership.
+          This assessment has also been reflected in
+          the enterprise Risk Register for treatment
+          and ownership.
         </p>
       </div>
     </section>
@@ -2300,10 +2795,8 @@ function AIInventory({
   const [search, setSearch] =
     useState("");
 
-  const [
-    riskFilter,
-    setRiskFilter,
-  ] = useState("All");
+  const [riskFilter, setRiskFilter] =
+    useState("All");
 
   const filteredSystems =
     systems.filter((system) => {
@@ -2326,8 +2819,7 @@ function AIInventory({
 
       const matchesRisk =
         riskFilter === "All" ||
-        system.risk ===
-          riskFilter;
+        system.risk === riskFilter;
 
       return (
         matchesSearch &&
@@ -2353,10 +2845,8 @@ function AIInventory({
   const reviews =
     systems.filter(
       (system) =>
-        system.status ===
-          "Review required" ||
-        system.status ===
-          "Assessment due"
+        system.status === "Review required" ||
+        system.status === "Assessment due"
     ).length;
 
   return (
@@ -2364,9 +2854,7 @@ function AIInventory({
       <section className="inventory-summary">
         <Metric
           label="Registered AI Systems"
-          value={String(
-            systems.length
-          )}
+          value={String(systems.length)}
           detail="Enterprise inventory"
         />
 
@@ -2379,9 +2867,7 @@ function AIInventory({
 
         <Metric
           label="Departments"
-          value={String(
-            departments
-          )}
+          value={String(departments)}
           detail="Using AI systems"
         />
 
@@ -2399,14 +2885,12 @@ function AIInventory({
               AI ASSET INVENTORY
             </span>
 
-            <h2>
-              Enterprise AI Systems
-            </h2>
+            <h2>Enterprise AI Systems</h2>
 
             <p>
               Central register of AI systems,
-              business owners, vendors and
-              risk classifications.
+              business owners, vendors and risk
+              classifications.
             </p>
           </div>
 
@@ -2416,9 +2900,7 @@ function AIInventory({
               placeholder="Search systems..."
               value={search}
               onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
+                setSearch(e.target.value)
               }
             />
 
@@ -2455,37 +2937,26 @@ function AIInventory({
               (system) => (
                 <div
                   className="inventory-row"
-                  key={
-                    system.id
-                  }
+                  key={system.id}
                 >
                   <div className="system-name-cell">
                     <div className="system-icon">
-                      {system.name.charAt(
-                        0
-                      )}
+                      {system.name.charAt(0)}
                     </div>
 
                     <div>
                       <strong>
-                        {
-                          system.name
-                        }
+                        {system.name}
                       </strong>
 
                       <small>
-                        {
-                          system.criticality
-                        }{" "}
-                        criticality
+                        {system.criticality} criticality
                       </small>
                     </div>
                   </div>
 
                   <span>
-                    {
-                      system.department
-                    }
+                    {system.department}
                   </span>
 
                   <span>
@@ -2497,9 +2968,7 @@ function AIInventory({
                   </span>
 
                   <span className="data-pill">
-                    {
-                      system.dataSensitivity
-                    }
+                    {system.dataSensitivity}
                   </span>
 
                   <span
@@ -2518,8 +2987,7 @@ function AIInventory({
         </div>
 
         <div className="inventory-footer">
-          Showing{" "}
-          {filteredSystems.length} of{" "}
+          Showing {filteredSystems.length} of{" "}
           {systems.length} AI systems
         </div>
       </section>
@@ -2539,10 +3007,8 @@ function AddSystemModal({
   const [name, setName] =
     useState("");
 
-  const [
-    department,
-    setDepartment,
-  ] = useState("");
+  const [department, setDepartment] =
+    useState("");
 
   const [owner, setOwner] =
     useState("");
@@ -2555,10 +3021,8 @@ function AddSystemModal({
     setDataSensitivity,
   ] = useState("Internal");
 
-  const [
-    criticality,
-    setCriticality,
-  ] = useState("Medium");
+  const [criticality, setCriticality] =
+    useState("Medium");
 
   function handleSubmit(
     e: FormEvent
@@ -2601,13 +3065,11 @@ function AddSystemModal({
               AI GOVERNANCE
             </span>
 
-            <h2>
-              Register AI System
-            </h2>
+            <h2>Register AI System</h2>
 
             <p>
-              Add a new AI system to the
-              NovaBridge enterprise inventory.
+              Add a new AI system to the NovaBridge
+              enterprise inventory.
             </p>
           </div>
 
@@ -2626,9 +3088,7 @@ function AddSystemModal({
             <input
               value={name}
               onChange={(e) =>
-                setName(
-                  e.target.value
-                )
+                setName(e.target.value)
               }
               placeholder="e.g. Marketing Copilot"
             />
@@ -2654,9 +3114,7 @@ function AddSystemModal({
             <input
               value={owner}
               onChange={(e) =>
-                setOwner(
-                  e.target.value
-                )
+                setOwner(e.target.value)
               }
               placeholder="e.g. Rami S."
             />
@@ -2668,9 +3126,7 @@ function AddSystemModal({
             <input
               value={vendor}
               onChange={(e) =>
-                setVendor(
-                  e.target.value
-                )
+                setVendor(e.target.value)
               }
               placeholder="e.g. OpenAI"
             />
@@ -2680,9 +3136,7 @@ function AddSystemModal({
             Data sensitivity
 
             <select
-              value={
-                dataSensitivity
-              }
+              value={dataSensitivity}
               onChange={(e) =>
                 setDataSensitivity(
                   e.target.value
